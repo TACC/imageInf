@@ -2,6 +2,10 @@ services:
   imageinf:
     build: .
     container_name: imageinf
+    volumes:
+      - ./imageinf:/app/imageinf
+      - ./tests:/app/tests
+      - ./.flake8:/app/.flake8
     expose:
       - "8000"
 
