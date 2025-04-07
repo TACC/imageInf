@@ -1,0 +1,16 @@
+services:
+  imageinf:
+    build: .
+    container_name: imageinf
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: imageinf_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - imageinf
