@@ -1,7 +1,14 @@
-.PHONY: build start test lint
+.PHONY: build deploy start stop
+
+TAG := $(shell git log --format=%h -1)
+IMAGE=taccaci/imageinf
 
 build:
-	docker-compose build
+	docker build -t $(IMAGE):$(TAG) .
+	docker tag $(IMAGE):$(TAG) $(IMAGE):local
+
+deploy:
+	docker push $(IMAGE):$(TAG)
 
 start:
 	docker-compose up
