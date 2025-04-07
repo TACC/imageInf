@@ -7,17 +7,13 @@ image inferencing API
 ### Build
 
 ```bash
-
 make build
-
 ```
 
 ### Start
 
 ```bash
-
 make start
-
 ```
 
 Go to:  `http://localhost/status`
