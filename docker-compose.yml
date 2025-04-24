@@ -6,6 +6,7 @@ services:
       - ./imageinf:/app/imageinf
       - ./tests:/app/tests
       - ./.flake8:/app/.flake8
+      - ./conftest.py:/app/conftest.py
     expose:
       - "8000"
 
@@ -13,7 +14,7 @@ services:
     image: nginx:alpine
     container_name: imageinf_nginx
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:

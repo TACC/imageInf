@@ -16,7 +16,7 @@ make build
 make start
 ```
 
-Go to:  `http://localhost/status`
+Go to:  `http://localhost:8080/status`
 
 
 ## Development + Testing
@@ -32,6 +32,12 @@ docker exec -it imageinf bash
 pytest tests
 ```
 
+> **Note**
+> To skip long tests that require downloading models, exclude the ones marked as slow:
+> ```bash
+> pytest -m "not slow"
+> ```
+>
 ### Run Linting checks
 ```
 black --check .

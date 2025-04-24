@@ -1,6 +1,12 @@
 fastapi
+pyjwt
 uvicorn[standard]
 pytest
 httpx
 black
 flake8
+tapipy
+Pillow
+torch
+transformers
+huggingface_hub[hf_xet]
