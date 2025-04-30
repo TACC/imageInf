@@ -5,7 +5,9 @@ from tapipy.tapis import Tapis
 username = input("Enter your Tapis username: ")
 password = getpass.getpass("Enter your Tapis password: ")
 
-tapis = Tapis(base_url="https://designsafe.tapis.io", username=username, password=password)
+tapis = Tapis(
+    base_url="https://designsafe.tapis.io", username=username, password=password
+)
 tapis.get_tokens()
 tapis_jwt = tapis.access_token.access_token
 
@@ -16,23 +18,16 @@ inference_request = {
     "files": [
         {
             "systemId": "designsafe.storage.published",
-            "path": "/PRJ-3379/RApp/uwrapid/Home/Photo 1642618419.jpg"
+            "path": "/PRJ-3379/RApp/uwrapid/Home/Photo 1642618419.jpg",
         }
     ]
 }
 
-headers = {
-    "Content-Type": "application/json",
-    "X-Tapis-Token": tapis_jwt
-}
+headers = {"Content-Type": "application/json", "X-Tapis-Token": tapis_jwt}
 
 FASTAPI_URL = "http://localhost:8080/inference/sync"
 
-response = requests.post(
-    FASTAPI_URL,
-    headers=headers,
-    json=inference_request
-)
+response = requests.post(FASTAPI_URL, headers=headers, json=inference_request)
 
 try:
     print("Response JSON:", response.json())
