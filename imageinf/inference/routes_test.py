@@ -17,7 +17,7 @@ def mock_vit(monkeypatch):
 
 @pytest.mark.slow
 def test_sync_inference_one_image_using_hugging_face_model(
-    client_authed, mock_tapis_token, mock_tapis_files
+    client_authed, mock_tapis_files
 ):
     payload = {
         "inferenceType": "classification",
@@ -28,8 +28,8 @@ def test_sync_inference_one_image_using_hugging_face_model(
             }
         ],
     }
-    headers = {"X-Tapis-Token": mock_tapis_token}
-    response = client_authed.post("/inference/sync", json=payload, headers=headers)
+
+    response = client_authed.post("/inference/sync", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -44,9 +44,7 @@ def test_sync_inference_one_image_using_hugging_face_model(
     assert isinstance(result["predictions"], list)
 
 
-def test_sync_inference_one_image(
-    client_authed, mock_tapis_token, mock_tapis_files, mock_vit
-):
+def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
     payload = {
         "inferenceType": "classification",
         "files": [
@@ -56,8 +54,7 @@ def test_sync_inference_one_image(
             }
         ],
     }
-    headers = {"X-Tapis-Token": mock_tapis_token}
-    response = client_authed.post("/inference/sync", json=payload, headers=headers)
+    response = client_authed.post("/inference/sync", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -71,3 +68,17 @@ def test_sync_inference_one_image(
     assert result["path"] == "/path/to/test-image.jpg"
     assert isinstance(result["predictions"], list)
     assert result["predictions"][0]["label"] == "mock-label"
+
+
+def test_sync_inference_unauthed(client_unauthed, mock_tapis_files, mock_vit):
+    payload = {
+        "inferenceType": "classification",
+        "files": [
+            {
+                "systemId": "designsafe.storage.default",
+                "path": "/path/to/test-image.jpg",
+            }
+        ],
+    }
+    response = client_unauthed.post("/inference/sync", json=payload)
+    assert response.status_code == 401

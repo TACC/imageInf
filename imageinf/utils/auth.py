@@ -7,10 +7,10 @@ from urllib.parse import urlparse
 import logging
 from pydantic import BaseModel
 
-
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# TODO consider just trusting *.tapis.io
 ALLOWED_TAPIS_TENANTS: list = [
     "https://designsafe.tapis.io",
     "https://portals.tapis.io",
@@ -29,6 +29,9 @@ def _extract_tenant_from_token(token: str) -> Optional[str]:
     Extract the issuer (i.e. tapis tenant host) from a JWT token without verifying it.
     This is used to determine which Tapis tenant to use for validation.
 
+    NOTE: we are not verifying token here!  See _validate_tapis_token and
+     `validate_token` from Tapis.
+
     raises HTTPException when unable to decode
     """
     try:
@@ -37,7 +40,7 @@ def _extract_tenant_from_token(token: str) -> Optional[str]:
         decoded = jwt.decode(token, options={"verify_signature": False})
         return decoded.get("iss")
     except Exception as e:
-        logger.warning(f"Failed to decode token: {str(e)}")
+        logger.error(f"Failed to decode token: {str(e)}")
         raise HTTPException(status_code=401, detail="Invalid token: failed to decode")
 
 
@@ -47,7 +50,7 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
         # Extract the tenant base URL from the token
         issuer = _extract_tenant_from_token(token)
         if not issuer:
-            logger.warning("JWT token does not contain an issuer (iss) claim")
+            logger.error("JWT token does not contain an issuer (iss) claim")
             raise HTTPException(
                 status_code=401, detail="Invalid token: missing issuer claim"
             )
@@ -56,9 +59,8 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
         base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
         tenant_host = parsed_url.netloc
 
-        # Confirm that we
         if base_url not in ALLOWED_TAPIS_TENANTS:
-            logger.warning(f"Unauthorized Tapis tenant: {base_url}")
+            logger.error(f"Unauthorized Tapis tenant: {base_url}")
             raise HTTPException(status_code=401, detail="Unauthorized Tapis tenant")
 
         tapis_client = Tapis(base_url=base_url)
@@ -67,30 +69,22 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
         # Extract username
         username = validation_response.get("tapis/username")
         if not username:
-            logger.warning("JWT token does not contain a username claim")
+            logger.error("JWT token does not contain a username claim")
             raise HTTPException(
                 status_code=401, detail="Invalid token: missing username"
             )
-
-        # Check if token is expired
-        exp_time = validation_response.get("exp", 0)
-        import time
-
-        is_expired = exp_time < time.time()
-
         return {
             "username": username,
             "tapis_token": token,
             "tenant_host": tenant_host,
             "tenant_id": validation_response.get("tapis/tenant_id"),
             "account_type": validation_response.get("tapis/account_type"),
-            "is_expired": is_expired,
             "tapis_client": tapis_client,
             "raw_validation": validation_response,
         }
 
     except BaseTapyException as e:
-        logger.error(f"Tapis token validation failed: {str(e)}")
+        logger.exception(f"Tapis token validation failed: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
     except HTTPException:
         # Pass through HTTP exceptions
@@ -100,10 +94,12 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-def get_tapis_user(x_tapis_token: str = Header(...)) -> TapisUser:
+def get_tapis_user(x_tapis_token: Optional[str] = Header(None)):
     """
     Dependency that returns a TapisUser model with user information.
     """
+    if not x_tapis_token:
+        raise HTTPException(status_code=401, detail="Missing X-Tapis-Token")
     data = _validate_tapis_token(x_tapis_token)
     return TapisUser(
         username=data["username"],

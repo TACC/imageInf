@@ -3,9 +3,7 @@ services:
     image: taccaci/imageinf:local
     container_name: imageinf
     volumes:
-      - ./imageinf:/app/imageinf
-      - ./.flake8:/app/.flake8
-      - ./conftest.py:/app/conftest.py
+      - .:/app
       - ~/.cache/huggingface:/root/.cache/huggingface
     expose:
       - "8000"

@@ -10,11 +10,17 @@ pytest_plugins = [
 
 
 @pytest.fixture
-def client_unauthed():
+def client_unauthed(mock_tapis_token):
     return TestClient(app)
 
 
 @pytest.fixture
-def client_authed(mock_tapis_auth):
-    # Using mock_tapis_auth makes this an authed client
-    return TestClient(app)
+def client_authed(mock_tapis_auth, mock_tapis_token):
+    # Subclass TestClient to auto-inject headers
+    class AuthedClient(TestClient):
+        def request(self, method, url, *args, **kwargs):
+            headers = kwargs.pop("headers", {}) or {}
+            headers["X-Tapis-Token"] = mock_tapis_token
+            return super().request(method, url, *args, headers=headers, **kwargs)
+
+    return AuthedClient(app)
