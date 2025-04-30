@@ -13,7 +13,7 @@ from fontawesome import icons
 # Constants
 HAZMAPPER_BACKEND = "https://hazmapper.tacc.utexas.edu/geoapi-staging"
 PROJECT_ID = 204
-# Due to https://tacc-main.atlassian.net/issues/WG-384, need to also 
+# Due to https://tacc-main.atlassian.net/issues/WG-384, need to also
 # hardcode the original system of images as geoapi is unaware of those.
 ORIGINAL_SYSTEM = "project-7a8056ca-7c32-4456-9187-4452eaf0f9e7"
 CACHE_DIR = "cache_images/"
@@ -35,7 +35,9 @@ def get_fa_icon(icon_name):
 def get_unique_color(index, total_classes):
     """Return a unique color from a colormap."""
     cmap = plt.get_cmap("tab10")  # Discrete colormap with distinct colors
-    return "#{:02x}{:02x}{:02x}".format(*[int(255 * c) for c in cmap(index % total_classes)[:3]])
+    return "#{:02x}{:02x}{:02x}".format(
+        *[int(255 * c) for c in cmap(index % total_classes)[:3]]
+    )
 
 
 # Classifier
@@ -43,8 +45,10 @@ class ViTModel:
     """Encapsulates ViT model setup and image classification."""
 
     def __init__(self, model_name="google/vit-base-patch16-224"):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = ViTForImageClassification.from_pretrained(model_name).to(self.device)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model = ViTForImageClassification.from_pretrained(model_name).to(
+            self.device
+        )
         self.processor = ViTImageProcessor.from_pretrained(model_name)
 
     def classify_image(self, image):
@@ -62,9 +66,9 @@ def authenticate_tapis():
     username = input("Enter your username: ")
     password = getpass.getpass("Enter your password: ")
 
-    tapis = Tapis(base_url="https://designsafe.tapis.io",
-                  username=username,
-                  password=password)
+    tapis = Tapis(
+        base_url="https://designsafe.tapis.io", username=username, password=password
+    )
     tapis.get_tokens()
     return tapis, tapis.access_token.access_token
 
@@ -72,8 +76,10 @@ def authenticate_tapis():
 # Fetch project features
 def get_project_features(project_id, jwt):
     """Fetch project features from Hazmapper GeoAPI."""
-    response = requests.get(f"{HAZMAPPER_BACKEND}/projects/{project_id}/features/",
-                            headers={'X-Tapis-Token': jwt})
+    response = requests.get(
+        f"{HAZMAPPER_BACKEND}/projects/{project_id}/features/",
+        headers={"X-Tapis-Token": jwt},
+    )
     return response.json()
 
 
@@ -93,11 +99,13 @@ def get_image_file(tapis, system, path):
 
 
 # Update feature properties
-def update_feature_properties(project_id, feature_id, taggit_groups, taggit_tags, style, jwt):
+def update_feature_properties(
+    project_id, feature_id, taggit_groups, taggit_tags, style, jwt
+):
     """Update feature properties in Hazmapper GeoAPI."""
     url = f"{HAZMAPPER_BACKEND}/projects/{project_id}/features/{feature_id}/properties/"
     payload = {"taggit": {"groups": taggit_groups, "tags": taggit_tags}, "style": style}
-    response = requests.post(url, json=payload, headers={'X-Tapis-Token': jwt})
+    response = requests.post(url, json=payload, headers={"X-Tapis-Token": jwt})
     return response.json()
 
 
@@ -152,7 +160,7 @@ for i, class_label in enumerate(unique_class_labels):
         },
         "style": {
             "color": color,
-        }
+        },
     }
 
     # Add the icon to the group and style only if it's found
@@ -163,8 +171,7 @@ for i, class_label in enumerate(unique_class_labels):
 # Update features with styles
 for feature_id, class_label in feature_to_class_label.items():
     properties = class_to_taggit_properties_map[class_label]
-    update_feature_properties(PROJECT_ID,
-                              feature_id,
-                              [properties["group"]],
-                              [], properties["style"], jwt)
+    update_feature_properties(
+        PROJECT_ID, feature_id, [properties["group"]], [], properties["style"], jwt
+    )
     print(f"Updated feature {feature_id} with {properties}")
