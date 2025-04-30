@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from .models import InferenceRequest, InferenceResponse
 from .processor import run_vit_on_tapis_images
 from ..utils.auth import get_tapis_user, TapisUser
@@ -26,7 +26,8 @@ def get_inference_result(job_id: str):
     summary="Run synchronous inference",
     description="""
 This endpoint is designed for quick, small jobs that can be processed immediately.
-Recommended for ≤ 5 image files. For larger workloads, use the asynchronous `/inference` endpoint.
+Recommended for ≤ 5 image files. For larger workloads, use the asynchronous
+`/inference` endpoint.
 """,
     response_model=InferenceResponse,
 )

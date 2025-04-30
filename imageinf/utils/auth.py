@@ -1,4 +1,4 @@
-from fastapi import Header, HTTPException, Depends
+from fastapi import Header, HTTPException
 import jwt
 from typing import Dict, Any, Optional
 from tapipy.tapis import Tapis

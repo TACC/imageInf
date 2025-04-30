@@ -21,8 +21,6 @@ def mock_tapis_token():
 
 @pytest.fixture
 def mock_tapis_auth(monkeypatch):
-    from imageinf.utils import auth
-
     mock_client = MagicMock()
     mock_client.validate_token.return_value = {
         "tapis/username": "testuser",
@@ -36,8 +34,6 @@ def mock_tapis_auth(monkeypatch):
 
 @pytest.fixture
 def mock_tapis_files(monkeypatch, mock_photo_file):
-    from imageinf.inference import processor
-
     mock_client = MagicMock()
     mock_files = MagicMock()
     mock_files.getContents.side_effect = lambda systemId, path: mock_photo_file
