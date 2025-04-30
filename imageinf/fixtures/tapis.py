@@ -8,10 +8,10 @@ import time
 def mock_tapis_token():
     payload = {
         "iss": "https://designsafe.tapis.io/v3/tokens",
-        "sub": "testt_user_name@designsafe",
+        "sub": "test_user_name@designsafe",
         "tapis/tenant_id": "designsafe",
         "tapis/token_type": "access",
-        "tapis/username": "testt_user_name",
+        "tapis/username": "test_user_name",
         "tapis/account_type": "user",
         "exp": time.time() + 300,
     }
