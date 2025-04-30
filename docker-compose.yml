@@ -4,9 +4,9 @@ services:
     container_name: imageinf
     volumes:
       - ./imageinf:/app/imageinf
-      - ./tests:/app/tests
       - ./.flake8:/app/.flake8
       - ./conftest.py:/app/conftest.py
+      - ~/.cache/huggingface:/root/.cache/huggingface
     expose:
       - "8000"
 
