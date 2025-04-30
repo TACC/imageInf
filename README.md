@@ -9,7 +9,7 @@ uploaded datasets to support research workflows and data discovery.
 - `/inference/sync`: Run inference on a single image (synchronous)
 - `/inference/async`: Submit a batch for async processing (coming soon)
 
-## Development
+## Running locally
 
 ### Build
 
@@ -25,6 +25,9 @@ make start
 
 Go to:  `http://localhost:8080/status`
 
+## Examples
+
+[Run a demo script or notebook](example/README.md) to test the image inference API.
 
 ## Testing and Linting
 
