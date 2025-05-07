@@ -25,9 +25,10 @@ inference_request = {
 
 headers = {"Content-Type": "application/json", "X-Tapis-Token": tapis_jwt}
 
-FASTAPI_URL = "http://localhost:8080/inference/sync"
+# Using local imageinf but could be changed to deployed imageinf
+IMAGEINF_URL = "http://localhost:8080/inference/sync"
 
-response = requests.post(FASTAPI_URL, headers=headers, json=inference_request)
+response = requests.post(IMAGEINF_URL, headers=headers, json=inference_request)
 
 try:
     print("Response JSON:", response.json())
