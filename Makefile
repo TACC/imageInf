@@ -1,7 +1,7 @@
 .PHONY: build deploy start stop
 
 TAG := $(shell git log --format=%h -1)
-IMAGE=taccaci/imageinf
+IMAGE=taccwma/imageinf
 
 build:
 	docker build -t $(IMAGE):$(TAG) .
