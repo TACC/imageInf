@@ -174,3 +174,7 @@ cython_debug/
 .pypirc
 
 .idea/
+.DS_Store
+
+# imageinf specific files
+cache_images

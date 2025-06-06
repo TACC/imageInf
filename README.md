@@ -42,3 +42,15 @@ Auto-fix formatting with black:
 ```
 black .
 ```
+
+### Example (frontend)
+
+```
+cd client
+npm ci
+npm run dev
+```
+
+Go to http://localhost:5173/
+
+For more info, see [Client README](client/README.md)
