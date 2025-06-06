@@ -62,7 +62,6 @@ jobs:
         working-directory: ./client
         run: npm run lint
 
-jobs:
   devops-check:
     name: Validate Docker builds
     runs-on: ubuntu-latest
