@@ -3,7 +3,7 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
-# Install system packages including vim
+# Install system packages (including vim)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     vim \
     && apt-get clean \
@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 WORKDIR /app
 
 COPY ./imageinf /app/imageinf
-COPY ./tests /app/tests
+COPY ./conftest.py /app/.
 
 ENV PYTHONPATH=/app
 
