@@ -30,7 +30,7 @@ jobs:
       - name: Run black check
         run:  black --check . && flake8 .
 
-  client-example:
+  client-example-ui:
     runs-on: ubuntu-latest
 
     steps:
@@ -53,3 +53,41 @@ jobs:
       - name: Lint code (ESLint)
         working-directory: ./client
         run: npm run lint
+
+jobs:
+  devops-check:
+    name: Validate Docker builds
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build backend image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          tags: taccwma/imageinf:ci-test
+          push: false
+          cache-from: type=registry,ref=taccwma/imageinf:buildcache
+          cache-to: type=registry,ref=taccwma/imageinf:buildcache,mode=max
+
+      - name: Build frontend image with cache
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.client
+          tags: taccwma/imageinf-ui:ci-test
+          push: false
+          cache-from: type=registry,ref=taccwma/imageinf-ui:buildcache
+          cache-to: type=registry,ref=taccwma/imageinf-ui:buildcache,mode=max
