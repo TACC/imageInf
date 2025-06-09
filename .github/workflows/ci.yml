@@ -67,7 +67,6 @@ jobs:
   devops-check:
     name: Validate Docker builds
     runs-on: ubuntu-latest
-    if: false  # disabling until secrets sorted
 
     steps:
       - name: Checkout repository
