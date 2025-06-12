@@ -2,7 +2,7 @@
 
 TAG := $(shell git log --format=%h -1)
 IMAGE=taccwma/imageinf
-IMAGE_CLIENT  = taccwma/imageinf-ui
+IMAGE_CLIENT  = taccwma/imageinf-client
 
 build: build-service build-client
 

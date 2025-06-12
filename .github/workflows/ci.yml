@@ -113,7 +113,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.client
-          tags: taccwma/imageinf-ui:ci-test
+          tags: taccwma/imageinf-client:ci-test
           push: false
-          cache-from: type=registry,ref=taccwma/imageinf-ui:buildcache
-          cache-to: type=registry,ref=taccwma/imageinf-ui:buildcache,mode=max
+          cache-from: type=registry,ref=taccwma/imageinf-client:buildcache
+          cache-to: type=registry,ref=taccwma/imageinf-client:buildcache,mode=max
