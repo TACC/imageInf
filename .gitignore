@@ -176,3 +176,6 @@ cython_debug/
 # Other things like IDE etc
 .idea/
 .DS_Store
+
+# imageinf specific files
+cache_images

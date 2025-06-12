@@ -1,6 +1,6 @@
 services:
   imageinf:
-    image: taccaci/imageinf:local
+    image: taccwma/imageinf:local
     container_name: imageinf
     volumes:
       - .:/app
