@@ -13,7 +13,7 @@ npm ci
 npm run dev
 ```
 
-By default, this runs at [http://localhost:5173](http://localhost:5173).
+By default, this runs at [http://localhost:8080](http://localhost:8080) when accessed through the nginx proxy.
 
 ---
 

@@ -1,6 +1,6 @@
 services:
   imageinf:
-    image: taccaci/imageinf:local
+    image: taccwma/imageinf:local
     container_name: imageinf
     volumes:
       - .:/app
@@ -15,5 +15,7 @@ services:
       - "8080:80"
     volumes:
       - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - imageinf
