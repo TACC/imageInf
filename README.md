@@ -39,7 +39,7 @@ docker exec -it imageinf bash
 
 ### Run Tests
 ```bash
-pytest tests
+pytest
 ```
 
 > **Note**
