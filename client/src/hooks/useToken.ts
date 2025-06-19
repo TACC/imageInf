@@ -65,7 +65,6 @@ const validateToken = async (host: string): Promise<TokenInfo> => {
       isValid: true
     };
   } catch {
-    debugger
     return {
       token: '',
       tapisHost: '',
