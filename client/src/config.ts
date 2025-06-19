@@ -15,12 +15,12 @@ const LocalConfig: Config = {
 };
 
 const ProdConfig: Config = {
-  clientId: 'prod-client-id', // todo
+  clientId: 'imageinf.prod',
   host: 'prod.imageinf-service.tacc.utexas.edu',
 };
 
 const PprdConfig: Config = {
-  clientId: 'pprd-client-id', // TODO
+  clientId: 'imageinf.pprd',
   host: 'pprd.imageinf-service.tacc.utexas.edu',
 };
 
