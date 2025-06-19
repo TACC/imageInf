@@ -26,7 +26,7 @@ inference_request = {
 headers = {"Content-Type": "application/json", "X-Tapis-Token": tapis_jwt}
 
 # Using local imageinf but could be changed to deployed imageinf
-IMAGEINF_URL = "http://localhost:8080/inference/sync"
+IMAGEINF_URL = "http://localhost:8080/api/inference/sync"
 
 response = requests.post(IMAGEINF_URL, headers=headers, json=inference_request)
 
