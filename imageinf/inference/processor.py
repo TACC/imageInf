@@ -11,8 +11,23 @@ from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
 CACHE_DIR = "cache_images"  # TODO add periodic cleanup
 MODEL_NAME = "google/vit-base-patch16-224"  # TODO generalize
 
+# --- Model Registry ---
+MODEL_REGISTRY = {}
+MODEL_METADATA = {}
 
-# Initialize model once per process
+def register_model_runner(model_name, description=None, link=None):
+    def decorator(cls):
+        MODEL_REGISTRY[model_name] = cls
+        MODEL_METADATA[model_name] = {
+            "name": model_name,
+            "description": description or model_name,
+            "link": link or ""
+        }
+        return cls
+    return decorator
+
+# --- Model Runners ---
+@register_model_runner("google/vit-base-patch16-224")
 class ViTModel:
     def __init__(self, model_name=MODEL_NAME):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -49,19 +64,21 @@ def get_image_file(tapis: Tapis, system: str, path: str) -> Image.Image:
     return Image.open(local_path)
 
 
-# Public interface
-def run_vit_on_tapis_images(
-    files: List[TapisFile], jwt_token: str
+# Public interface: plugin dispatch
+def run_model_on_tapis_images(
+    files: List[TapisFile], jwt_token: str, model_name: str = MODEL_NAME
 ) -> InferenceResponse:
-    # TODO tenant and tenant url either passed in or derived from jwt_token
+    if model_name not in MODEL_REGISTRY:
+        raise ValueError(f"Model '{model_name}' is not supported.")
+    ModelClass = MODEL_REGISTRY[model_name]
+    model = ModelClass(model_name)
     tapis = Tapis(base_url="https://designsafe.tapis.io", access_token=jwt_token)
-    vit_model = ViTModel()
 
     results = []
     for file in files:
         try:
             image = get_image_file(tapis, file.systemId, file.path)
-            predictions = vit_model.classify_image(image)
+            predictions = model.classify_image(image)
 
             results.append(
                 InferenceResult(
@@ -73,4 +90,4 @@ def run_vit_on_tapis_images(
             # Optional: add error logging or partial failure reporting
             raise RuntimeError(f"Failed to process {file.path}: {str(e)}")
 
-    return InferenceResponse(model=MODEL_NAME, results=results)
+    return InferenceResponse(model=model_name, results=results)

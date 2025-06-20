@@ -26,3 +26,4 @@ class InferenceResponse(BaseModel):
 class InferenceRequest(BaseModel):
     inferenceType: str = "classification"
     files: List[TapisFile]
+    model: str = "google/vit-base-patch16-224"

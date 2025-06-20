@@ -1,0 +1,39 @@
+# Dependency directories 
+**/node_modules/
+**/bower_components/
+**/.pnp/
+**/.yarn/
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/out/
+**/.vite/
+**/.cache/
+**/.turbo/
+
+# Logs and temp
+**/*.log
+**/.tsbuildinfo
+**/.eslintcache
+**/.parcel-cache/
+**/.nuxt/
+
+# Coverage
+**/coverage/
+
+# Test artifacts
+**/__snapshots__/
+**/__generated__/
+
+# IDE/editor config
+**/.idea/
+**/.vscode/
+**/.history/
+**/.DS_Store
+
+# Git and Cursor internals
+**/.git/
+**/.cursor/
+
