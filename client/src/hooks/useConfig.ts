@@ -6,7 +6,6 @@ const getEnvironment = (): Environment => {
 
   switch (hostname) {
     case 'localhost':
-    case '127.0.0.1':
       return Environment.Local;
     case 'pprd.imageinf-service.tacc.utexas.edu':
       return Environment.Pprd;
