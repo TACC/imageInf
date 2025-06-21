@@ -15,6 +15,11 @@ def submit_async_inference():
     raise HTTPException(status_code=501, detail="Async inference not implemented yet")
 
 
+@router.get("/models", summary="List available models")
+def list_models():
+    return list(MODEL_METADATA.values())
+
+
 @router.get("/{job_id}")
 def get_inference_result(job_id: str):
     # TODO: Look up job status + result from DB or task
@@ -41,8 +46,3 @@ def run_sync_inference(
         return run_model_on_tapis_images(request.files, user.tapis_token, request.model)
     except ValueError as e:
         raise HTTPException(400, detail=str(e))
-
-
-@router.get("/models", summary="List available models")
-def list_models():
-    return list(MODEL_METADATA.values())

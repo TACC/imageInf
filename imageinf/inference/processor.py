@@ -27,7 +27,11 @@ def register_model_runner(model_name, description=None, link=None):
     return decorator
 
 # --- Model Runners ---
-@register_model_runner("google/vit-base-patch16-224")
+@register_model_runner(
+    "google/vit-base-patch16-224",
+    description="Vision Transformer (ViT) base model from Google, patch size 16, 224x224.",
+    link="https://huggingface.co/google/vit-base-patch16-224"
+)
 class ViTModel:
     def __init__(self, model_name=MODEL_NAME):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
