@@ -50,7 +50,6 @@ const validateToken = async (host: string): Promise<TokenInfo> => {
       }
     });
 
-    debugger
     if (!response.ok) {
       return {
         token: '',

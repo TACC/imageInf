@@ -9,7 +9,6 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        debugger;
         // TODO: Tapis should return in query param instead of fragment
         // const fragment = window.location.hash.substring(1); // Remove the # character
         // const params = new URLSearchParams(fragment);

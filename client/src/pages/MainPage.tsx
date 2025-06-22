@@ -4,8 +4,8 @@ import { useToken } from '../hooks/useToken';
 import { useInference } from '../hooks/useInference';
 import { useConfig } from '../hooks/useConfig';
 import { useInferenceModel } from '../hooks/useInferenceModel';
-import { Button, Typography, Select, Row, Col, Input, Layout, message, Divider, List, Modal } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
+import { Button, Typography, Select, Row, Col, Input, Layout, Divider, List, Modal } from 'antd';
+import { LogoutOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
 
 const { Title, Paragraph, Text } = Typography;
@@ -23,6 +23,134 @@ const fileOptions: TapisFile[] = [
     path: '/PRJ-3379/RApp/uwrapid/Home/foojpg',
   },
 ];
+
+interface InferenceInterfaceProps {
+  selectedFile: TapisFile | null;
+  setSelectedFile: (file: TapisFile | null) => void;
+  selectedModel: string | undefined;
+  setSelectedModel: (model: string) => void;
+  result: string;
+  setResult: (result: string) => void;
+  models: InferenceModelMeta[] | undefined;
+  modelsLoading: boolean;
+}
+
+const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
+  selectedFile,
+  setSelectedFile,
+  selectedModel,
+  setSelectedModel,
+  result,
+  setResult,
+  models,
+  modelsLoading,
+}) => {
+  return (
+    <>
+      <div style={{ marginBottom: 32, textAlign: 'center' }}>
+        <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
+          <Col span={6} style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
+              Select a model
+            </div>
+          </Col>
+          <Col span={18}>
+            <Select
+              value={selectedModel}
+              style={{ width: '100%' }}
+              loading={modelsLoading}
+              onChange={val => setSelectedModel(val)}
+              options={models?.map((m: InferenceModelMeta) => ({
+                label: (
+                  <span>
+                    <b>{m.name}</b>
+                    <span style={{ color: '#aaa', marginLeft: 8 }}>{m.description}</span>
+                    {m.link && (
+                      <a href={m.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, color: '#40a9ff' }}>
+                        [link]
+                      </a>
+                    )}
+                  </span>
+                ),
+                value: m.name,
+              }))}
+              placeholder="Select a model"
+            />
+          </Col>
+        </Row>
+        <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
+          <Col span={6} style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
+              Select an image from the curated set
+            </div>
+          </Col>
+          <Col span={18}>
+            <Select
+              value={selectedFile?.path}
+              style={{ width: '100%' }}
+              onChange={val => {
+                const file = fileOptions.find(f => f.path === val) || null;
+                setSelectedFile(file);
+              }}
+              options={fileOptions.map(f => ({
+                label: `${f.systemId}:${f.path}`,
+                value: f.path,
+              }))}
+            />
+          </Col>
+        </Row>
+        <Divider style={{ background: '#444', margin: '24px 0 0 0' }} />
+      </div>
+
+      <Row gutter={32} style={{ marginBottom: 32, width: '100%', margin: '0 auto' }}>
+        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 500 }}>
+          {/* TODO: Show image preview here */}
+          <Text style={{ color: '#888' }}>Image preview (coming soon)</Text>
+        </Col>
+        <Col span={12}>
+          <div style={{ 
+            background: '#1a1a1a', 
+            color: '#fff', 
+            fontSize: 16, 
+            width: 500,
+            minHeight: 400,
+            padding: 12,
+            borderRadius: 6,
+            border: '1px solid #434343',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8
+          }}>
+            {(result === 'Making request...' || result === 'Error') && (
+              <div style={{ marginTop: 2 }}>
+                {result === 'Making request...' ? (
+                  <LoadingOutlined style={{ color: '#40a9ff' }} />
+                ) : (
+                  <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
+                )}
+              </div>
+            )}
+            <TextArea
+              value={result}
+              onChange={e => setResult(e.target.value)}
+              rows={20}
+              placeholder="Inference results will appear here"
+              style={{ 
+                background: 'transparent', 
+                color: '#fff', 
+                fontSize: 16, 
+                width: '100%',
+                border: 'none',
+                padding: 0,
+                resize: 'none'
+              }}
+            />
+          </div>
+        </Col>
+      </Row>
+    </>
+  );
+};
 
 export const MainPage = () => {
   const navigate = useNavigate();
@@ -49,26 +177,35 @@ export const MainPage = () => {
     setResult('');
   }, [selectedFile]);
 
+  // Auto-select first model when models are loaded
+  useEffect(() => {
+    if (models && models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0].name);
+    }
+  }, [models, selectedModel]);
+
+  // Auto-submit when both model and file are selected
+  useEffect(() => {
+    if (selectedModel && selectedFile && tokenData?.token) {
+      inferenceMutation.mutate({ files: [selectedFile], model: selectedModel });
+    }
+  }, [selectedModel, selectedFile, tokenData?.token]);
+
   // Show inference results in the text area
   useEffect(() => {
+    if (inferenceMutation.isPending) {
+      setResult('Making request...');
+    } else
     if (inferenceMutation.isSuccess && inferenceMutation.data) {
       setResult(JSON.stringify(inferenceMutation.data, null, 2));
-    } else if (inferenceMutation.isError && inferenceMutation.error instanceof Error) {
-      setResult(`Error: ${inferenceMutation.error.message}`);
+    } else if (inferenceMutation.isError) {
+      setResult('Error');
     }
-  }, [inferenceMutation.isSuccess, inferenceMutation.data, inferenceMutation.isError, inferenceMutation.error]);
+  }, [inferenceMutation.isSuccess, inferenceMutation.data, inferenceMutation.isError, inferenceMutation.error, inferenceMutation.isPending]);
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  const handleSubmit = () => {
-    if (selectedFile && tokenData?.token && selectedModel) {
-      inferenceMutation.mutate({ files: [selectedFile], model: selectedModel });
-    } else {
-      message.error('No file or model selected or not authenticated');
-    }
-  };
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#242424' }}>
@@ -76,7 +213,7 @@ export const MainPage = () => {
         <Row style={{ width: '100%' }} align="middle" justify="start">
           <Col flex="auto">
             <Title style={{ color: '#fff', marginBottom: 0, marginTop: 16, fontSize: 32, textAlign: 'center' }}>imageInf - DEMO</Title>
-            <Paragraph style={{ color: '#fff', marginBottom: 0, marginTop: 0, maxWidth: 600, textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
+            <Paragraph style={{ color: '#fff', marginBottom: 0, marginTop: 0, maxWidth: '90%', textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
               AI-powered image inferencing service that applies domain-specific categorization tags to uploaded datasets to support research workflows and data discovery.{' '}
               <a
                 onClick={() => setIsModalVisible(true)}
@@ -88,77 +225,19 @@ export const MainPage = () => {
           </Col>
         </Row>
       </Header>
-      <Content style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 16px 0 16px' }}>
-        <div style={{ marginBottom: 32, textAlign: 'center' }}>
-          <div style={{ textAlign: 'left', maxWidth: 1000, margin: '0 auto 8px auto', fontWeight: 500, color: '#fff', fontSize: 18 }}>
-            Select a model
-          </div>
-          <Select
-            value={selectedModel}
-            style={{ width: 800, maxWidth: '100%', marginBottom: 24 }}
-            loading={modelsLoading}
-            onChange={val => setSelectedModel(val)}
-            options={models?.map((m: InferenceModelMeta) => ({
-              label: (
-                <span>
-                  <b>{m.name}</b>
-                  <span style={{ color: '#aaa', marginLeft: 8 }}>{m.description}</span>
-                  {m.link && (
-                    <a href={m.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, color: '#40a9ff' }}>
-                      [link]
-                    </a>
-                  )}
-                </span>
-              ),
-              value: m.name,
-            }))}
-            placeholder="Select a model"
+      <Content style={{ maxWidth: '90%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
+        {!modelsLoading && (
+          <InferenceInterface
+            selectedFile={selectedFile}
+            setSelectedFile={setSelectedFile}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+            result={result}
+            setResult={setResult}
+            models={models}
+            modelsLoading={modelsLoading}
           />
-          <div style={{ textAlign: 'left', maxWidth: 800, margin: '0 auto 8px auto', fontWeight: 500, color: '#fff', fontSize: 18 }}>
-            Select an image from the curated set
-          </div>
-          <Select
-            value={selectedFile?.path}
-            style={{ width: 800, maxWidth: '100%' }}
-            onChange={val => {
-              const file = fileOptions.find(f => f.path === val) || null;
-              setSelectedFile(file);
-            }}
-            options={fileOptions.map(f => ({
-              label: `${f.systemId}:${f.path}`,
-              value: f.path,
-            }))}
-          />
-          <Divider style={{ background: '#444', margin: '24px 0 0 0' }} />
-        </div>
-
-        <Row gutter={32} style={{ marginBottom: 32, width: 900, maxWidth: '100%', margin: '0 auto' }}>
-          <Col span={14} style={{ minHeight: 240, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>
-            {/* TODO: Show image preview here */}
-            <Text style={{ color: '#888' }}>Image preview (coming soon)</Text>
-          </Col>
-          <Col span={10}>
-            <TextArea
-              value={result}
-              onChange={e => setResult(e.target.value)}
-              rows={14}
-              placeholder="Inference results will appear here"
-              style={{ background: '#1a1a1a', color: '#fff', fontSize: 16 }}
-            />
-          </Col>
-        </Row>
-
-        <div style={{ textAlign: 'center' }}>
-          <Button
-            type="primary"
-            size="large"
-            onClick={handleSubmit}
-            disabled={!!result || inferenceMutation.isPending || !selectedModel}
-            loading={inferenceMutation.isPending}
-          >
-            Submit
-          </Button>
-        </div>
+        )}
       </Content>
       <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
         <Button
@@ -173,6 +252,7 @@ export const MainPage = () => {
         title="Current Limitations & Notes"
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
+        footer={null}
         width={600}
       >
         <List
