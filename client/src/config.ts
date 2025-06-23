@@ -1,8 +1,10 @@
-export enum Environment {
-  Local = 'local',
-  Prod = 'prod',
-  Pprd = 'pprd',
-}
+export const Environment = {
+  Local: 'local',
+  Prod: 'prod',
+  Pprd: 'pprd',
+};
+
+export type Environment = 'local' | 'prod' | 'pprd';
 
 interface Config {
   clientId: string;
@@ -28,6 +30,6 @@ const configs = {
   [Environment.Local]: LocalConfig,
   [Environment.Prod]: ProdConfig,
   [Environment.Pprd]: PprdConfig,
-} as const;
+};
 
 export default configs;

@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import { useConfig } from './useConfig';
 import type { InferenceModelMeta } from '../types/inference';
 
 const fetchModels = async (token: string): Promise<InferenceModelMeta[]> => {
