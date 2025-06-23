@@ -155,7 +155,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
 export const MainPage = () => {
   const navigate = useNavigate();
   const config = useConfig();
-  const { data: tokenData, isError, isLoading } = useToken();
+  const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
   const [selectedFile, setSelectedFile] = useState<TapisFile | null>(fileOptions[0]);
   const [result, setResult] = useState('');
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
@@ -167,10 +167,10 @@ export const MainPage = () => {
   const inferenceMutation = useInference(tokenData?.token ?? '', imageInfUrl);
 
   useEffect(() => {
-    if (isError || (!isLoading && !tokenData?.isValid)) {
+    if (isError || (!tokenLoading && !tokenData?.isValid)) {
       navigate('/login');
     }
-  }, [isError, tokenData, isLoading, navigate]);
+  }, [isError, tokenData, tokenLoading, navigate]);
 
   // Clear results when switching files
   useEffect(() => {
@@ -203,8 +203,19 @@ export const MainPage = () => {
     }
   }, [inferenceMutation.isSuccess, inferenceMutation.data, inferenceMutation.isError, inferenceMutation.error, inferenceMutation.isPending]);
 
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (tokenLoading || modelsLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#242424',
+        width: '100vw',
+      }}>
+        <div style={{ color: '#fff', fontSize: 32, textAlign: 'center' }}>Loading...</div>
+      </div>
+    );
   }
 
   return (
@@ -226,18 +237,16 @@ export const MainPage = () => {
         </Row>
       </Header>
       <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
-        {!modelsLoading && (
-          <InferenceInterface
-            selectedFile={selectedFile}
-            setSelectedFile={setSelectedFile}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            result={result}
-            setResult={setResult}
-            models={models}
-            modelsLoading={modelsLoading}
-          />
-        )}
+        <InferenceInterface
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+          selectedModel={selectedModel}
+          setSelectedModel={setSelectedModel}
+          result={result}
+          setResult={setResult}
+          models={models}
+          modelsLoading={modelsLoading}
+        />
       </Content>
       <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
         <Button
