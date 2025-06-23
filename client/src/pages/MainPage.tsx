@@ -50,12 +50,12 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
     <>
       <div style={{ marginBottom: 32, textAlign: 'center' }}>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
-          <Col span={6} style={{ textAlign: 'right' }}>
+          <Col span={5} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
               Select a model
             </div>
           </Col>
-          <Col span={18}>
+          <Col span={19}>
             <Select
               value={selectedModel}
               style={{ width: '100%' }}
@@ -80,12 +80,12 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
           </Col>
         </Row>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
-          <Col span={6} style={{ textAlign: 'right' }}>
+          <Col span={5} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
               Select an image from the curated set
             </div>
           </Col>
-          <Col span={18}>
+          <Col span={19}>
             <Select
               value={selectedFile?.path}
               style={{ width: '100%' }}
@@ -104,7 +104,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
       </div>
 
       <Row gutter={32} style={{ marginBottom: 32, width: '100%', margin: '0 auto' }}>
-        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 500 }}>
+        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 600 }}>
           <TapisFileView file={selectedFile} />
         </Col>
         <Col span={12}>
@@ -112,7 +112,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
             background: '#1a1a1a', 
             color: '#fff', 
             fontSize: 16, 
-            width: 500,
+            width: 600,
             minHeight: 400,
             padding: 12,
             borderRadius: 6,
@@ -225,7 +225,7 @@ export const MainPage = () => {
           </Col>
         </Row>
       </Header>
-      <Content style={{ maxWidth: '90%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
+      <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
         {!modelsLoading && (
           <InferenceInterface
             selectedFile={selectedFile}
