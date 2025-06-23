@@ -33,7 +33,6 @@ interface InferenceInterfaceProps {
   result: string;
   setResult: (result: string) => void;
   models: InferenceModelMeta[] | undefined;
-  modelsLoading: boolean;
 }
 
 const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
@@ -44,23 +43,20 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
   result,
   setResult,
   models,
-  modelsLoading,
 }) => {
   return (
     <>
       <div style={{ marginBottom: 32, textAlign: 'center' }}>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
-          <Col span={5} style={{ textAlign: 'right' }}>
+          <Col span={6} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
               Select a model
             </div>
           </Col>
-          <Col span={19}>
+          <Col span={18}>
             <Select
               value={selectedModel}
               style={{ width: '100%' }}
-              loading={modelsLoading}
-              onChange={val => setSelectedModel(val)}
               options={models?.map((m: InferenceModelMeta) => ({
                 label: (
                   <span>
@@ -80,12 +76,12 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
           </Col>
         </Row>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
-          <Col span={5} style={{ textAlign: 'right' }}>
+          <Col span={6} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
               Select an image from the curated set
             </div>
           </Col>
-          <Col span={19}>
+          <Col span={18}>
             <Select
               value={selectedFile?.path}
               style={{ width: '100%' }}
@@ -104,7 +100,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
       </div>
 
       <Row gutter={32} style={{ marginBottom: 32, width: '100%', margin: '0 auto' }}>
-        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 600 }}>
+        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 500 }}>
           <TapisFileView file={selectedFile} />
         </Col>
         <Col span={12}>
@@ -112,7 +108,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
             background: '#1a1a1a', 
             color: '#fff', 
             fontSize: 16, 
-            width: 600,
+            width: 500,
             minHeight: 400,
             padding: 12,
             borderRadius: 6,
@@ -245,7 +241,6 @@ export const MainPage = () => {
           result={result}
           setResult={setResult}
           models={models}
-          modelsLoading={modelsLoading}
         />
       </Content>
       <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
