@@ -15,7 +15,7 @@ export const MainPage = () => {
   const navigate = useNavigate();
   const config = useConfig();
   const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
-  const { data: models, isLoading: modelsLoading } = useInferenceModel(tokenData?.token);
+  const { data: models, isLoading: modelsLoading } = useInferenceModel(tokenData?.token ?? '');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
 
