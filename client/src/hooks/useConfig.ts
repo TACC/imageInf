@@ -1,24 +1,14 @@
-import { useMemo } from 'react';
 import configs, { Environment } from '../config';
 
-const getEnvironment = (): Environment => {
+const getEnv = (): Environment => {
   const hostname = window.location.hostname;
-
-  switch (hostname) {
-    case 'localhost':
-      return Environment.Local;
-    case 'pprd.imageinf-service.tacc.utexas.edu':
-      return Environment.Pprd;
-    case 'prod.imageinf-service.tacc.utexas.edu':
-      return Environment.Prod;
-    default:
-      return Environment.Prod;
-  }
+  if (hostname === 'localhost') return 'local';
+  if (hostname === 'pprd.imageinf-service.tacc.utexas.edu') return 'pprd';
+  if (hostname === 'prod.imageinf-service.tacc.utexas.edu') return 'prod';
+  return 'prod';
 };
 
 export const useConfig = () => {
-  return useMemo(() => {
-    const env = getEnvironment();
-    return configs[env];
-  }, []);
+  const env = getEnv();
+  return configs[env];
 };
