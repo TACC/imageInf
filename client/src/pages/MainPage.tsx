@@ -4,11 +4,12 @@ import { useToken } from '../hooks/useToken';
 import { useInference } from '../hooks/useInference';
 import { useConfig } from '../hooks/useConfig';
 import { useInferenceModel } from '../hooks/useInferenceModel';
+import TapisFileView from '../components/TapisFileView';
 import { Button, Typography, Select, Row, Col, Input, Layout, Divider, List, Modal } from 'antd';
 import { LogoutOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Header, Content } = Layout;
 
@@ -104,8 +105,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
 
       <Row gutter={32} style={{ marginBottom: 32, width: '100%', margin: '0 auto' }}>
         <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 500 }}>
-          {/* TODO: Show image preview here */}
-          <Text style={{ color: '#888' }}>Image preview (coming soon)</Text>
+          <TapisFileView file={selectedFile} />
         </Col>
         <Col span={12}>
           <div style={{ 
@@ -254,6 +254,7 @@ export const MainPage = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={600}
+        bodyStyle={{ background: '#fafafa' }}
       >
         <List
           dataSource={[
