@@ -64,7 +64,7 @@ Auto-fix formatting with black:
 black .
 ```
 
-### Example (frontend)
+### Client example (frontend)
 
 ```
 cd client
