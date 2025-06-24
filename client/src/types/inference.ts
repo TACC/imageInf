@@ -3,14 +3,25 @@ export interface TapisFile {
   path: string;
 }
 
+export interface Prediction {
+  label: string;
+  score: number;
+}
+
+export interface InferenceResult {
+  systemId: string;
+  path: string;
+  predictions: Prediction[];
+}
+
 export interface InferenceRequest {
   files: TapisFile[];
   model?: string;
 }
 
 export interface InferenceResponse {
-  // Adjust this as needed to match your backend's response
-  [key: string]: any;
+  model: string;
+  results: InferenceResult[];
 }
 
 export interface InferenceModelMeta {
