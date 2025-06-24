@@ -19,4 +19,4 @@ export const useInferenceModel = (token: string) => {
     queryFn: () => fetchModels(token),
     enabled: !!token,
   });
-}; 
+};

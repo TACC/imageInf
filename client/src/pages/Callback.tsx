@@ -12,7 +12,7 @@ const Callback = () => {
         // TODO: Tapis should return in query param instead of fragment
         // const fragment = window.location.hash.substring(1); // Remove the # character
         // const params = new URLSearchParams(fragment);
-        
+
         // Get the access token from query params
         const accessToken = searchParams.get('access_token');
         const expiresIn = searchParams.get('expires_in') ?? '3600'; // Default to 1 hour but should be 4 hours
@@ -34,7 +34,7 @@ const Callback = () => {
         // Store the token and expiration
         sessionStorage.setItem('access_token', accessToken);
         sessionStorage.setItem('expires_at', expiresAt.toString());
-        
+
         // Clear the state
         sessionStorage.removeItem('oauth_state');
 

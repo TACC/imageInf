@@ -19,4 +19,4 @@ export const useInference = (tapisToken: string, imageInfUrl: string) => {
       return response.json() as Promise<InferenceResponse>;
     },
   });
-}; 
+};

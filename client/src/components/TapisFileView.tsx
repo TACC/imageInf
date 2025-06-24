@@ -14,10 +14,11 @@ interface TapisFileViewProps {
 
 export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => {
   const { data: tokenData } = useToken();
-  const { data: fileContent, isLoading: fileLoading, isError: fileError } = useFileContent(
-    tokenData?.token ?? '',
-    file
-  );
+  const {
+    data: fileContent,
+    isLoading: fileLoading,
+    isError: fileError,
+  } = useFileContent(tokenData?.token ?? '', file);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImgUrl, setModalImgUrl] = useState<string | null>(null);
 
@@ -30,65 +31,67 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
     if (fileLoading) {
       return <LoadingOutlined style={{ color: '#40a9ff', fontSize: 24 }} />;
     }
-    
+
     if (fileError) {
       return <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: 24 }} />;
     }
-    
+
     if (fileContent) {
       console.log('File content received:', {
         contentType: fileContent.contentType,
         size: fileContent.data.size,
-        type: fileContent.data.type
+        type: fileContent.data.type,
       });
     }
-    
+
     if (fileContent && fileContent.contentType.startsWith('image/')) {
       const imageUrl = URL.createObjectURL(fileContent.data);
       return (
-        <img 
-          src={imageUrl} 
-          alt="Selected image" 
-          style={{ 
-            maxWidth: '100%', 
-            maxHeight: '100%', 
+        <img
+          src={imageUrl}
+          alt="Selected image"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: 4,
-            cursor: 'pointer'
-          }} 
+            cursor: 'pointer',
+          }}
           onClick={() => handleImageClick(imageUrl)}
         />
       );
     }
-    
+
     // Fallback: check if blob type is image or if file extension suggests it's an image
-    if (fileContent && (
-      fileContent.data.type.startsWith('image/') || 
-      (file && /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.path))
-    )) {
+    if (
+      fileContent &&
+      (fileContent.data.type.startsWith('image/') ||
+        (file && /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(file.path)))
+    ) {
       const imageUrl = URL.createObjectURL(fileContent.data);
       return (
-        <img 
-          src={imageUrl} 
-          alt="Selected image" 
-          style={{ 
-            maxWidth: '100%', 
-            maxHeight: '100%', 
+        <img
+          src={imageUrl}
+          alt="Selected image"
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: 4,
-            cursor: 'pointer'
-          }} 
+            cursor: 'pointer',
+          }}
           onClick={() => handleImageClick(imageUrl)}
         />
       );
     }
-    
+
     return (
       <div>
         <Text style={{ color: '#888' }}>Not an image file</Text>
         <br />
         <Text style={{ color: '#666', fontSize: 12 }}>
-          Content-Type: {fileContent?.contentType || 'unknown'} | Blob Type: {fileContent?.data.type || 'unknown'}
+          Content-Type: {fileContent?.contentType || 'unknown'} | Blob Type:{' '}
+          {fileContent?.data.type || 'unknown'}
         </Text>
       </div>
     );
@@ -96,9 +99,7 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
 
   return (
     <>
-      <div style={style}>
-        {renderContent()}
-      </div>
+      <div style={style}>{renderContent()}</div>
       <Modal
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
@@ -118,7 +119,7 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
               objectFit: 'contain',
               borderRadius: 8,
               background: '#111',
-              margin: 0
+              margin: 0,
             }}
           />
         )}
@@ -127,4 +128,4 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
   );
 };
 
-export default TapisFileView; 
+export default TapisFileView;

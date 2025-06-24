@@ -52,29 +52,38 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, 
     } else if (inferenceMutation.isError) {
       setResult('Error');
     }
-  }, [inferenceMutation.isSuccess, inferenceMutation.data, inferenceMutation.isError, inferenceMutation.error, inferenceMutation.isPending]);
+  }, [
+    inferenceMutation.isSuccess,
+    inferenceMutation.data,
+    inferenceMutation.isError,
+    inferenceMutation.error,
+    inferenceMutation.isPending,
+  ]);
 
   return (
     <>
       <div style={{ width: '100%', marginBottom: 32, textAlign: 'center' }}>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
           <Col span={4} style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
-              Select a model
-            </div>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>Select a model</div>
           </Col>
           <Col span={20}>
             <Select
               value={selectedModel}
               style={{ width: '100%' }}
-              onChange={val => setSelectedModel(val)}
+              onChange={(val) => setSelectedModel(val)}
               options={models.map((m: InferenceModelMeta) => ({
                 label: (
                   <span>
                     <b>{m.name}</b>
                     <span style={{ color: '#aaa', marginLeft: 8 }}>{m.description}</span>
                     {m.link && (
-                      <a href={m.link} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, color: '#40a9ff' }}>
+                      <a
+                        href={m.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ marginLeft: 8, color: '#40a9ff' }}
+                      >
                         [link]
                       </a>
                     )}
@@ -96,11 +105,11 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, 
             <Select
               value={selectedFile?.path}
               style={{ width: '100%' }}
-              onChange={val => {
-                const file = curatedFileList.find(f => f.path === val) || null;
+              onChange={(val) => {
+                const file = curatedFileList.find((f) => f.path === val) || null;
                 setSelectedFile(file);
               }}
-              options={curatedFileList.map(f => ({
+              options={curatedFileList.map((f) => ({
                 label: `${f.systemId}:${f.path}`,
                 value: f.path,
               }))}
@@ -111,23 +120,36 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, 
       </div>
 
       <Row gutter={32} style={{ marginBottom: 32, width: '100%', margin: '0 auto' }}>
-        <Col span={12} style={{ minHeight: 400, background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, width: 600 }}>
+        <Col
+          span={12}
+          style={{
+            minHeight: 400,
+            background: '#1a1a1a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 8,
+            width: 600,
+          }}
+        >
           <TapisFileView file={selectedFile} />
         </Col>
         <Col span={12}>
-          <div style={{ 
-            background: '#1a1a1a', 
-            color: '#fff', 
-            fontSize: 16, 
-            width: 600,
-            minHeight: 400,
-            padding: 12,
-            borderRadius: 6,
-            border: '1px solid #434343',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 8
-          }}>
+          <div
+            style={{
+              background: '#1a1a1a',
+              color: '#fff',
+              fontSize: 16,
+              width: 600,
+              minHeight: 400,
+              padding: 12,
+              borderRadius: 6,
+              border: '1px solid #434343',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 8,
+            }}
+          >
             {(result === 'Making request...' || result === 'Error') && (
               <div style={{ marginTop: 2 }}>
                 {result === 'Making request...' ? (
@@ -139,19 +161,19 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, 
             )}
             <TextArea
               value={result}
-              onChange={e => setResult(e.target.value)}
+              onChange={(e) => setResult(e.target.value)}
               rows={20}
               placeholder="Inference results will appear here"
-              style={{ 
-                background: 'transparent', 
-                color: '#fff', 
-                fontSize: 16, 
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                fontSize: 16,
                 width: '100%',
                 minWidth: 0,
                 maxWidth: 800,
                 border: 'none',
                 padding: 0,
-                resize: 'none'
+                resize: 'none',
               }}
             />
           </div>
@@ -161,4 +183,4 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, 
   );
 };
 
-export default InferenceInterface; 
+export default InferenceInterface;

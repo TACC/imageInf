@@ -17,4 +17,4 @@ export interface InferenceModelMeta {
   name: string;
   description: string;
   link: string;
-} 
+}

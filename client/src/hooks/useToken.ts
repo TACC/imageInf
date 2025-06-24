@@ -29,12 +29,12 @@ const getHostFromIss = (iss: string): string => {
 const validateToken = async (host: string): Promise<TokenInfo> => {
   const token = sessionStorage.getItem('access_token');
   const expiresAt = sessionStorage.getItem('expires_at');
-  
+
   if (!token || !expiresAt || Date.now() > parseInt(expiresAt)) {
     return {
       token: '',
       tapisHost: host,
-      isValid: false
+      isValid: false,
     };
   }
 
@@ -46,39 +46,39 @@ const validateToken = async (host: string): Promise<TokenInfo> => {
     // check user info to confirm valid token
     const response = await fetch(`${tapisHost}/v3/oauth2/userinfo`, {
       headers: {
-        'X-Tapis-Token': token
-      }
+        'X-Tapis-Token': token,
+      },
     });
 
     if (!response.ok) {
       return {
         token: '',
         tapisHost,
-        isValid: false
+        isValid: false,
       };
     }
 
     return {
       token,
       tapisHost,
-      isValid: true
+      isValid: true,
     };
   } catch {
     return {
       token: '',
       tapisHost: '',
-      isValid: false
+      isValid: false,
     };
   }
 };
 
 export const useToken = () => {
   const config = useConfig();
-  
+
   return useQuery({
     queryKey: ['token'],
     queryFn: () => validateToken(config.host),
     retry: false,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 };
