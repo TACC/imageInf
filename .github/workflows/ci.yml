@@ -36,7 +36,7 @@ jobs:
       - name: Run tests
         run: PYTHONPATH=. pytest -m "not slow"
 
-      - name: Run black check
+      - name: Run black and flake8 check
         run:  black --check . && flake8 .
 
   client-example-ui:

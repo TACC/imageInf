@@ -15,22 +15,26 @@ MODEL_NAME = "google/vit-base-patch16-224"  # TODO generalize
 MODEL_REGISTRY = {}
 MODEL_METADATA = {}
 
+
 def register_model_runner(model_name, description=None, link=None):
     def decorator(cls):
         MODEL_REGISTRY[model_name] = cls
         MODEL_METADATA[model_name] = {
             "name": model_name,
             "description": description or model_name,
-            "link": link or ""
+            "link": link or "",
         }
         return cls
+
     return decorator
+
 
 # --- Model Runners ---
 @register_model_runner(
     "google/vit-base-patch16-224",
-    description="Vision Transformer (ViT) base model from Google, patch size 16, 224x224.",
-    link="https://huggingface.co/google/vit-base-patch16-224"
+    description="Vision Transformer (ViT) base model from"
+    " Google, patch size 16, 224x224.",
+    link="https://huggingface.co/google/vit-base-patch16-224",
 )
 class ViTModel:
     def __init__(self, model_name=MODEL_NAME):
