@@ -31,7 +31,7 @@ export const curatedFileList: TapisFile[] = [
   {
     /*PRJ-3252 | GEER reconnaissance mission: Western European Floods Summer 2021    */
     systemId: 'designsafe.storage.published',
-    path: ' /PRJ-3252/Germany (August 9-13, 2021)/Green (August 12)/Photos/MGeorge/PXL_20210812_135723068.jpg',
+    path: '/PRJ-3252/Germany (August 9-13, 2021)/Green (August 12)/Photos/MGeorge/PXL_20210812_135723068.jpg',
   },
   {
     /*PRJ-3252 | GEER reconnaissance mission: Western European Floods Summer 2021    */
