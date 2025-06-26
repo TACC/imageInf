@@ -6,6 +6,7 @@ app = FastAPI(
     title="imageInf API",
     description="A simple image inference API",
     version="0.1.0",
+    root_path="/api",
 )
 
 app.include_router(status_router)

@@ -1,19 +1,25 @@
+networks:
+  imageinf-network:
+
 services:
   imageinf:
     image: taccwma/imageinf:local
-    container_name: imageinf
+    container_name: imageinf_service
     volumes:
       - .:/app
       - ~/.cache/huggingface:/root/.cache/huggingface
-    expose:
-      - "8000"
+    networks:
+      - imageinf-network
+    command: uvicorn imageinf.main:app --host 0.0.0.0 --port 8000 --reload
 
   nginx:
     image: nginx:alpine
     container_name: imageinf_nginx
     ports:
-      - "8080:80"
+      - "8080:80" # serve client at / and service at /api on port 8080 (see local_conf/nginx.conf)
     volumes:
       - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - imageinf
+    networks:
+      - imageinf-network

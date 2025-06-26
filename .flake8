@@ -1,3 +1,9 @@
 [flake8]
 max-line-length = 88
-
+exclude =
+    client,
+    */client/*,
+    .git,
+    __pycache__,
+    build,
+    dist

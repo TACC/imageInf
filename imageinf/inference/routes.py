@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from .models import InferenceRequest, InferenceResponse
-from .processor import run_vit_on_tapis_images
+from .processor import run_model_on_tapis_images, MODEL_METADATA
 from ..utils.auth import get_tapis_user, TapisUser
 
 
@@ -13,6 +13,11 @@ router = APIRouter(
 def submit_async_inference():
     # TODO: Accept request payload, validate, enqueue async task
     raise HTTPException(status_code=501, detail="Async inference not implemented yet")
+
+
+@router.get("/models", summary="List available models")
+def list_models():
+    return list(MODEL_METADATA.values())
 
 
 @router.get("/{job_id}")
@@ -37,4 +42,7 @@ def run_sync_inference(
     if len(request.files) > 5:
         raise HTTPException(400, detail="Too many files. Use async endpoint for >5.")
 
-    return run_vit_on_tapis_images(request.files, user.tapis_token)
+    try:
+        return run_model_on_tapis_images(request.files, user.tapis_token, request.model)
+    except ValueError as e:
+        raise HTTPException(400, detail=str(e))
