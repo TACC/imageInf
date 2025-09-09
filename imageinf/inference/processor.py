@@ -77,10 +77,13 @@ class ClipModel:
             logits = self.model(**inputs).logits
 
         # model predicts one of the 1000 ImageNet classes
-        predicted_label = logits.argmax(-1).item()
-        print(self.model.config.id2label[predicted_label])
+        probs = logits.softmax(-1).squeeze().tolist()
+        top5 = sorted(enumerate(probs), key=lambda x: x[1], reverse=True)[:5]
 
-        predictions = [predicted_label]
+        predictions = [
+            Prediction(label=self.model.config.id2label[i], score=round(score, 4))
+            for i, score in top5
+        ]
         return predictions
 
 
