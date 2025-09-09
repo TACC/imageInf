@@ -5,6 +5,7 @@ from typing import List
 
 from tapipy.tapis import Tapis
 from transformers import ViTForImageClassification, ViTImageProcessor
+from transformers import AutoImageProcessor, CLIPForImageClassification
 
 from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
 
@@ -55,6 +56,31 @@ class ViTModel:
                 :5
             ]  # Top-5
         ]
+        return predictions
+
+
+@register_model_runner(
+    "openai/clip-vit-base-patch32",
+    description="OpenAi's CLIP...TODO",
+    link="https://huggingface.co/docs/transformers/en/model_doc/clip",
+)
+class ClipModel:
+    def __init__(self, model_name="openai/clip-vit-base-patch32"):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.image_processor = AutoImageProcessor.from_pretrained(model_name)
+        self.model = CLIPForImageClassification.from_pretrained(model_name)
+
+    def classify_image(self, image: Image.Image) -> List[Prediction]:
+        inputs = self.image_processor(image, return_tensors="pt").to(self.device)
+
+        with torch.no_grad():
+            logits = self.model(**inputs).logits
+
+        # model predicts one of the 1000 ImageNet classes
+        predicted_label = logits.argmax(-1).item()
+        print(self.model.config.id2label[predicted_label])
+
+        predictions = [predicted_label]
         return predictions
 
 
