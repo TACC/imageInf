@@ -9,8 +9,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
 
 CACHE_DIR = "cache_images"  # TODO add periodic cleanup
-MODEL_NAME = "google/vit-base-patch16-224"  # TODO generalize
-
+DEFAULT_MODEL_NAME = "google/vit-base-patch16-224"
 # --- Model Registry ---
 MODEL_REGISTRY = {}
 MODEL_METADATA = {}
@@ -37,7 +36,7 @@ def register_model_runner(model_name, description=None, link=None):
     link="https://huggingface.co/google/vit-base-patch16-224",
 )
 class ViTModel:
-    def __init__(self, model_name=MODEL_NAME):
+    def __init__(self, model_name="google/vit-base-patch16-224"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = ViTForImageClassification.from_pretrained(model_name).to(
             self.device
@@ -74,12 +73,13 @@ def get_image_file(tapis: Tapis, system: str, path: str) -> Image.Image:
 
 # Public interface: plugin dispatch
 def run_model_on_tapis_images(
-    files: List[TapisFile], jwt_token: str, model_name: str = MODEL_NAME
+    files: List[TapisFile], jwt_token: str, model_name: str = DEFAULT_MODEL_NAME
 ) -> InferenceResponse:
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{model_name}' is not supported.")
     ModelClass = MODEL_REGISTRY[model_name]
     model = ModelClass(model_name)
+
     tapis = Tapis(base_url="https://designsafe.tapis.io", access_token=jwt_token)
 
     results = []
