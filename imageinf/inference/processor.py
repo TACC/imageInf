@@ -6,7 +6,8 @@ from typing import List
 from tapipy.tapis import Tapis
 from transformers import ViTForImageClassification, ViTImageProcessor
 from transformers import AutoImageProcessor, CLIPForImageClassification
-
+import torch.nn.functional as F
+from transformers import CLIPModel, CLIPProcessor
 from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
 
 CACHE_DIR = "cache_images"  # TODO add periodic cleanup
@@ -61,29 +62,73 @@ class ViTModel:
 
 @register_model_runner(
     "openai/clip-vit-base-patch32",
-    description="OpenAi's CLIP...TODO",
+    description="Zero-shot house vs car using CLIP text-image similarity.",
     link="https://huggingface.co/docs/transformers/en/model_doc/clip",
 )
 class ClipModel:
-    def __init__(self, model_name="openai/clip-vit-base-patch32"):
+    def __init__(self, model_name: str = "openai/clip-vit-base-patch32"):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.image_processor = AutoImageProcessor.from_pretrained(model_name)
-        self.model = CLIPForImageClassification.from_pretrained(model_name)
+        self.model = CLIPModel.from_pretrained(model_name).to(self.device)
+        self.processor = CLIPProcessor.from_pretrained(model_name)
 
-    def classify_image(self, image: Image.Image) -> List[Prediction]:
-        inputs = self.image_processor(image, return_tensors="pt").to(self.device)
+        # The labels we care about
+        self.labels = ["house", "car"]
+
+        # A few prompt templates tends to improve robustness; we’ll average them
+        self.templates = [
+            "a photo of a {}",
+            "a cropped photo of a {}",
+            "a street scene with a {}",
+            "an aerial photo of a {}",
+            "a picture of a {}",
+        ]
+
+        # Pre-compute the text embeddings once (cached)
+        with torch.no_grad():
+            all_prompts = [t.format(lbl) for lbl in self.labels for t in self.templates]
+            text_inputs = self.processor(text=all_prompts, return_tensors="pt", padding=True)
+            text_inputs = {k: v.to(self.device) for k, v in text_inputs.items()}
+
+            # shape: [num_prompts, D]
+            text_embeds = self.model.get_text_features(
+                input_ids=text_inputs["input_ids"],
+                attention_mask=text_inputs["attention_mask"],
+            )
+            text_embeds = F.normalize(text_embeds, dim=-1)
+
+            # Average templates per label
+            n_templates = len(self.templates)
+            # reshape to [num_labels, n_templates, D] then mean over templates
+            self.text_features = (
+                text_embeds.reshape(len(self.labels), n_templates, -1).mean(dim=1)
+            )  # -> [num_labels, D]
+            self.text_features = F.normalize(self.text_features, dim=-1)  # safety normalize
+
+    def classify_image(self, image: Image.Image) -> List["Prediction"]:
+        """
+        Returns two Prediction entries for 'house' and 'car' with probabilities summing to 1.0.
+        """
+        # Preprocess image
+        inputs = self.processor(images=image, return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            logits = self.model(**inputs).logits
+            # [1, D]
+            image_embeds = self.model.get_image_features(pixel_values=inputs["pixel_values"])
+            image_embeds = F.normalize(image_embeds, dim=-1)
 
-        # model predicts one of the 1000 ImageNet classes
-        probs = logits.softmax(-1).squeeze().tolist()
-        top5 = sorted(enumerate(probs), key=lambda x: x[1], reverse=True)[:5]
+            # Cosine similarity matrix: [1, D] @ [D, num_labels] -> [1, num_labels]
+            # Temperature scaling (~as in CLIP’s paper/code)
+            logits = (image_embeds @ self.text_features.T) * 100.0
+            probs = logits.softmax(dim=-1).squeeze(0).tolist()  # length == 2
 
+        # Build your existing Prediction objects
         predictions = [
-            Prediction(label=self.model.config.id2label[i], score=round(score, 4))
-            for i, score in top5
+            Prediction(label=label, score=round(prob, 4))
+            for label, prob in zip(self.labels, probs)
         ]
+        # Sort high->low to keep consistent with your previous top-k behavior
+        predictions.sort(key=lambda p: p.score, reverse=True)
         return predictions
 
 
