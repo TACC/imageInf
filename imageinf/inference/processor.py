@@ -203,9 +203,209 @@ def get_image_file(tapis: Tapis, system: str, path: str) -> Image.Image:
     return Image.open(local_path)
 
 
+# Mapping the ImageNet-1k to larger categories
+CATEGORY_MAPPING = {
+    "car": [
+        "sports car", "convertible", "beach wagon", "cab", "taxi",
+        "police van", "ambulance", "limousine", "minivan", "Model T",
+        "racer", "race car", "go-kart", "golfcart", "fire engine",
+        "pickup", "tow truck", "jeep", "landrover", "passenger car",
+        "car wheel", "minibus", "moving van", "garbage truck", "dustcart",
+        "tow truck", "recreational vehicle", "trailer truck"
+    ],
+    "person": [
+        # ImageNet-1K only has these 3 humans?
+        "scuba diver", "bridegroom", "groom", "baseball player"
+    ],
+    "building": [
+        # Residential buildings
+        "mobile home", "manufactured home", "trailer", "recreational vehicle",
+        "boathouse", "cottage", "lakeside", "dwelling", "villa",
+
+        # Large residential
+        "palace", "castle", "monastery", "abbey", "convent",
+
+        # Commercial buildings
+        "restaurant", "bakery", "grocery store", "butcher shop",
+        "confectionery", "toyshop", "bookshop", "shoe shop",
+        "tobacco shop", "barbershop", "apothecary shop",
+        "storefront", "mercantile establishment",
+
+        # Institutional buildings
+        "library", "church", "mosque", "synagogue", "temple",
+        "school", "prison", "hospital", "theater", "theatre",
+        "cinema", "movie theater", "bell cote", "bell tower",
+
+        # Industrial buildings
+        "barn", "threshing machine", "lumbermill", "steel mill",
+        "factory", "brewery", "winery",
+
+        # Multi-unit residential
+        "apartment", "apartment building", "housing",
+
+        # Tall buildings
+        "skyscraper", "office building", "tower",
+
+        # Structures with roofs
+        "greenhouse", "canopy", "dome", "pavilion",
+        "bannister", "sliding door", "dwelling",
+
+        # Other structures
+        "beacon", "pier", "dock", "boathouse", "pier",
+        "tollbooth", "booth", "gas station", "gasoline station",
+        "moving van"
+    ],
+    "animal": [
+        # Dogs (ImageNet has ~100+ dog breeds)
+        "dog", "puppy", "poodle", "corgi", "pug", "chihuahua",
+        "shepherd", "german shepherd", "collie", "border collie",
+        "retriever", "golden retriever", "labrador",
+        "beagle", "basset", "bloodhound", "foxhound",
+        "terrier", "bull terrier", "boston terrier", "yorkshire terrier",
+        "bulldog", "boxer", "mastiff", "rottweiler",
+        "husky", "malamute", "samoyed", "pomeranian",
+        "chow", "keeshond", "spitz", "schipperke",
+
+        # Cats
+        "cat", "tabby", "tiger cat", "persian cat", "siamese cat",
+        "egyptian cat", "cougar", "lynx",
+
+        # Farm animals
+        "horse", "cow", "ox", "cattle", "sheep", "ram", "bighorn",
+        "pig", "hog", "piglet", "chicken", "hen", "rooster",
+
+        # Wild animals
+        "elephant", "bear", "lion", "tiger", "leopard", "cheetah",
+        "zebra", "giraffe", "monkey", "gorilla", "chimpanzee",
+        "orangutan", "baboon", "panda", "sloth bear",
+        "wolf", "coyote", "fox", "hyena",
+        "deer", "elk", "moose", "gazelle", "antelope",
+        "hippopotamus", "rhinoceros", "warthog",
+
+        # Marine animals
+        "whale", "dolphin", "seal", "sea lion",
+
+        # Birds
+        "bird", "eagle", "vulture", "owl", "hawk",
+        "parrot", "macaw", "cockatoo", "toucan",
+        "flamingo", "stork", "crane", "heron", "egret",
+        "pelican", "albatross", "goose", "duck", "swan",
+        "peacock", "pheasant", "quail", "partridge",
+        "ostrich", "penguin", "chicken", "rooster", "hen",
+
+        # Reptiles & Amphibians
+        "turtle", "tortoise", "terrapin",
+        "lizard", "iguana", "chameleon", "gecko",
+        "snake", "cobra", "viper", "boa",
+        "crocodile", "alligator",
+        "frog", "toad", "salamander", "newt",
+
+        # Fish
+        "fish", "goldfish", "tench", "barracouta",
+        "eel", "coho", "rock beauty", "anemone fish",
+        "sturgeon", "gar", "lionfish", "puffer",
+        "stingray", "electric ray", "jellyfish",
+
+        # Insects & Invertebrates
+        "butterfly", "moth", "admiral", "ringlet",
+        "monarch", "cabbage butterfly", "sulphur butterfly",
+        "lycaenid", "dragonfly", "damselfly",
+        "beetle", "ladybug", "ground beetle", "leaf beetle",
+        "dung beetle", "rhinoceros beetle",
+        "bee", "honeybee", "fly", "bee eater",
+        "ant", "grasshopper", "cricket", "stick insect",
+        "cockroach", "mantis", "cicada", "leafhopper",
+        "lacewing", "scorpion", "spider", "tarantula",
+        "tick", "centipede", "millipede",
+        "snail", "slug", "sea slug", "chiton",
+        "sea urchin", "sea cucumber", "starfish",
+        "crab", "hermit crab", "lobster", "crayfish",
+        "isopod", "conch"
+    ],
+    "nature": [
+        "mountain", "valley", "cliff", "promontory", "alp",
+        "volcano", "geyser", "hot spring",
+        "lakeside", "lakeshore", "seashore", "coast", "sandbar",
+        "beach", "coral reef", "shoal",
+        "cliff face", "stone wall", "rock"
+    ],
+    "infrastructure": [
+        "bridge", "suspension bridge", "steel arch bridge",
+        "viaduct", "aqueduct",
+        "dam", "dike", "breakwater", "jetty",
+        "pier", "dock", "boathouse",
+        "beacon", "lighthouse", "beacon light",
+        "traffic light", "street sign", "parking meter",
+        "mailbox", "letter box",
+        "fountain", "triumphal arch", "arch",
+        "megalith", "stone wall", "wall",
+        "bannister", "baluster", "railing"
+    ],
+    "equipment": [
+        "solar dish", "solar collector", "solar furnace",
+        "beacon", "spotlight", "torch"
+    ],
+}
+
+
+def aggregate_predictions(predictions: List[Prediction]) -> List[Prediction]:
+    """
+    Aggregate fine-grained ImageNet labels into coarse categories.
+
+    ImageNet labels often contain comma-separated synonyms
+    (e.g., "mobile home, manufactured home", "solar dish, solar collector, solar furnace").
+    This function splits these labels and matches against our category keywords.
+
+    Matching strategy:
+    1. Split ImageNet label on commas to get individual synonyms
+    2. For each synonym, check if any of our keywords appear as substrings
+    3. Assign to the first matching category
+    4. Take the maximum score if multiple labels match the same category
+
+    TODO: Use an LLM to dynamically map ImageNet labels to categories instead of this approach
+    """
+    category_scores = {}
+
+    for pred in predictions:
+        label_lower = pred.label.lower()
+
+        # Split on commas to handle synonyms (e.g., "mobile home, manufactured home")
+        # ImageNet often provides multiple names for the same concept
+        label_parts = [part.strip() for part in label_lower.split(',')]
+
+        matched = False
+        for category, keywords in CATEGORY_MAPPING.items():
+            if matched:
+                break  # Only assign to first matching category
+
+            # Check if any keyword matches any part of the label
+            for label_part in label_parts:
+                for keyword in keywords:
+                    if keyword.lower() in label_part:
+                        # Take the maximum score if multiple labels match same category
+                        category_scores[category] = max(
+                            category_scores.get(category, 0.0),
+                            pred.score
+                        )
+                        matched = True
+                        break
+                if matched:
+                    break
+
+    # Return sorted by score (highest first)
+    aggregated = [
+        Prediction(label=cat, score=round(score, 4))
+        for cat, score in category_scores.items()
+    ]
+
+    return sorted(aggregated, key=lambda p: p.score, reverse=True)
+
+
 # Public interface: plugin dispatch
 def run_model_on_tapis_images(
-        files: List[TapisFile], jwt_token: str, model_name: str = DEFAULT_MODEL_NAME
+        files: List[TapisFile],
+        jwt_token: str,
+        model_name: str = DEFAULT_MODEL_NAME
 ) -> InferenceResponse:
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{model_name}' is not supported.")
@@ -215,18 +415,47 @@ def run_model_on_tapis_images(
     tapis = Tapis(base_url="https://designsafe.tapis.io", access_token=jwt_token)
 
     results = []
+    aggregated_results = []
+
     for file in files:
         try:
             image = get_image_file(tapis, file.systemId, file.path)
             predictions = model.classify_image(image)
+
+            # Always create detailed results
             results.append(
                 InferenceResult(
-                    systemId=file.systemId, path=file.path, predictions=predictions
+                    systemId=file.systemId,
+                    path=file.path,
+                    predictions=predictions
                 )
             )
 
+            # Always create aggregated results (skip for CLIP)
+            if "clip" not in model_name.lower():
+                aggregated = aggregate_predictions(predictions)
+                aggregated_results.append(
+                    InferenceResult(
+                        systemId=file.systemId,
+                        path=file.path,
+                        predictions=aggregated
+                    )
+                )
+            else:
+                # For CLIP, just copy the results since it's already aggregated
+                aggregated_results.append(
+                    InferenceResult(
+                        systemId=file.systemId,
+                        path=file.path,
+                        predictions=predictions
+                    )
+                )
+
         except Exception as e:
-            # Optional: add error logging or partial failure reporting
             raise RuntimeError(f"Failed to process {file.path}: {str(e)}")
 
-    return InferenceResponse(model=model_name, results=results)
+    return InferenceResponse(
+        model=model_name,
+        aggregated_results=aggregated_results,
+        results=results
+    )

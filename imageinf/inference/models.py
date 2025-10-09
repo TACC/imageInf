@@ -20,6 +20,7 @@ class InferenceResult(BaseModel):
 
 class InferenceResponse(BaseModel):
     model: str
+    aggregated_results: List[InferenceResult]
     results: List[InferenceResult]
 
 
