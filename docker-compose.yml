@@ -1,13 +1,32 @@
 networks:
   imageinf-network:
 
+volumes:
+  huggingface-cache:  # Named volume for persistence
+
 services:
+  # One-off service to preload models
+  model-preloader:
+    image: taccwma/imageinf:local
+    container_name: imageinf_preloader
+    volumes:
+      - huggingface-cache:/root/.cache/huggingface
+      - .:/app
+    networks:
+      - imageinf-network
+    environment:
+      - PYTHONUNBUFFERED=1  # Unbuffered output
+      - HF_HUB_DISABLE_PROGRESS_BARS=0  # Enable progress bars
+    command: python -u preload_models.py
+    profiles:
+      - setup
+
   imageinf:
     image: taccwma/imageinf:local
     container_name: imageinf_service
     volumes:
       - .:/app
-      - ~/.cache/huggingface:/root/.cache/huggingface
+      - huggingface-cache:/root/.cache/huggingface  # Share the cache
     networks:
       - imageinf-network
     command: uvicorn imageinf.main:app --host 0.0.0.0 --port 8000 --reload
@@ -16,7 +35,7 @@ services:
     image: nginx:alpine
     container_name: imageinf_nginx
     ports:
-      - "8080:80" # serve client at / and service at /api on port 8080 (see local_conf/nginx.conf)
+      - "8080:80"
     volumes:
       - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:

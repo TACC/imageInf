@@ -24,9 +24,20 @@ make build
 
 ### Start
 
+Preload models into cache and then start
+
 ```bash
+make preload
 make start
 ```
+
+or
+
+```bash
+make preload_start
+```
+
+
 
 Go to:  `http://localhost:8080/api/status`
 
