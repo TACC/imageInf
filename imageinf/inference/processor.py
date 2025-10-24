@@ -8,6 +8,7 @@ from transformers import AutoModelForImageClassification, AutoImageProcessor
 import torch.nn.functional as F
 from transformers import CLIPModel, CLIPProcessor
 from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
+from .metadata import extract_image_metadata
 
 CACHE_DIR = "cache_images"  # TODO add periodic cleanup
 DEFAULT_MODEL_NAME = "google/vit-base-patch16-224"
@@ -108,13 +109,29 @@ class SwinLargeModel(TransformerModel):
     pass
 
 
-@register_model_runner(
-    "openai/clip-vit-large-patch14",
-    description="Zero-shot multi-label tagging using CLIP with paired positives/negatives.",
-    link="https://huggingface.co/docs/transformers/en/model_doc/clip",
-)
-class ClipModel:
-    def __init__(self, model_name: str = "openai/clip-vit-large-patch14"):
+class BaseCLIPModel:
+    """Base class for CLIP-based zero-shot multi-label classifiers"""
+
+    # Default labels - subclasses can override
+    DEFAULT_LABELS = [
+        "house", "building",
+        # Vehicles
+        "car", "truck", "bus",
+        # People
+        "person", "group of people",
+        # Infrastructure
+        "road", "bridge", "parking lot",
+        # Damage
+        "debris", "rubble", "damaged building", "flooded area", "fallen tree",
+        # Context
+        "trees", "water", "sky"
+    ]
+
+    # Default threshold - subclasses can override
+    DEFAULT_THRESHOLD = 0.55
+    BINARY_TEMPERATURE = 20.0
+
+    def __init__(self, model_name: str, labels: Optional[List[str]] = None):
         # Device selection
         if torch.backends.mps.is_available():
             self.device = torch.device("mps")
@@ -126,54 +143,26 @@ class ClipModel:
         self.model = CLIPModel.from_pretrained(model_name).to(self.device)
         self.processor = CLIPProcessor.from_pretrained(model_name)
 
-        # Keep your label set modest at first; expand once thresholds are tuned.
-        self.labels = [
-            "house",
-            "building",
+        # Use provided labels or default
+        self.labels = labels or self.DEFAULT_LABELS
 
-            # Vehicles
-            "car",
-            "truck",
-            "bus",
-
-            # People
-            "person",
-            "group of people",
-
-            # Infrastructure
-            "road",
-            "bridge",
-            "parking lot",
-
-            # Damage
-            "debris",
-            "rubble",
-            "damaged building",
-            "flooded area",
-            "fallen tree",
-
-            # Context
-            "trees",
-            "water",
-            "sky"
-        ]
-
-        # Negative phrases per label (can be tuned)
+        # Negative phrases per label
         self.neg_templates = {
             lab: f"no {lab} present" for lab in self.labels
         }
 
-        # Small temperature for the 2-way softmax; 15–30 works well.
-        self.binary_temperature = 20.0
-
         # Pre-compute & cache text features for [positive, negative] pairs
+        self._precompute_text_features()
+
+    def _precompute_text_features(self):
+        """Pre-compute text embeddings for all label pairs"""
         pairs = []
         for lab in self.labels:
             pos = f"a photo of a {lab}"
             neg = self.neg_templates[lab]
             pairs.append((pos, neg))
 
-        all_texts = [t for pair in pairs for t in pair]  # [pos, neg, pos, neg, ...]
+        all_texts = [t for pair in pairs for t in pair]
         with torch.no_grad():
             ti = self.processor(text=all_texts, return_tensors="pt", padding=True)
             ti = {k: v.to(self.device) for k, v in ti.items()}
@@ -181,21 +170,24 @@ class ClipModel:
                 input_ids=ti["input_ids"], attention_mask=ti["attention_mask"]
             )
             emb = F.normalize(emb, dim=-1)
-            # reshape to [L, 2, D]
+            # Reshape to [L, 2, D] where L=num_labels, 2=[pos,neg], D=embed_dim
             self.text_pairs = emb.reshape(len(self.labels), 2, -1)
 
     def classify_image(
-        self,
-        image: Image.Image,
-        threshold: float = 0.55,    # presence prob cutoff; TODO
-        top_k: Optional[int] = None,
-        debug_when_empty: bool = True,
+            self,
+            image: Image.Image,
+            threshold: Optional[float] = None,
+            top_k: Optional[int] = None,
+            debug_when_empty: bool = True,
     ) -> List[Prediction]:
         """
         Multi-label presence scoring via paired positive/negative prompts.
         - Returns any labels with presence >= threshold.
         - May return []
         """
+        if threshold is None:
+            threshold = self.DEFAULT_THRESHOLD
+
         # Ensure RGB
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -208,18 +200,19 @@ class ClipModel:
             img_feat = self.model.get_image_features(pixel_values=inputs["pixel_values"])
             img_feat = F.normalize(img_feat, dim=-1)  # [1, D]
 
-            # cosine sims to each [pos, neg] pair: [1, L, 2]
-            # einsum: (B,D) x (L,2,D) -> (B,L,2)
+            # Cosine sims to each [pos, neg] pair: [1, L, 2]
             sims2 = torch.einsum("bd,lcd->blc", img_feat, self.text_pairs)
 
-            # small temperature for 2-way competition
-            logits2 = sims2 * self.binary_temperature  # [1, L, 2]
+            # Small temperature for 2-way competition
+            logits2 = sims2 * self.BINARY_TEMPERATURE  # [1, L, 2]
             probs2 = torch.softmax(logits2, dim=-1)[0]  # [L, 2]
-            presence = probs2[:, 0]  # probability of the positive class
+            presence = probs2[:, 0]  # Probability of the positive class
 
         scores = presence.tolist()
-        preds_all = [Prediction(label=lbl, score=round(float(s), 4))
-                     for lbl, s in zip(self.labels, scores)]
+        preds_all = [
+            Prediction(label=lbl, score=round(float(s), 4))
+            for lbl, s in zip(self.labels, scores)
+        ]
         preds_all.sort(key=lambda p: p.score, reverse=True)
 
         # Filter by threshold
@@ -227,13 +220,48 @@ class ClipModel:
         if top_k is not None:
             preds = preds[:top_k]
 
-
         if not preds and debug_when_empty:
             top_dbg = preds_all[:5]
-            print("[CLIP debug] No labels passed threshold."
-                  f" Max={top_dbg[0].label}:{top_dbg[0].score}"
-                  f" Top5={[(p.label, p.score) for p in top_dbg]}")
+            print(
+                f"[CLIP debug] No labels passed threshold={threshold}. "
+                f"Max={top_dbg[0].label}:{top_dbg[0].score} "
+                f"Top5={[(p.label, p.score) for p in top_dbg]}"
+            )
         return preds
+
+
+# --- Registered CLIP Models ---
+
+@register_model_runner(
+    "openai/clip-vit-large-patch14",
+    description="CLIP ViT-Large - zero-shot multi-label (~400M params)",
+    link="https://huggingface.co/openai/clip-vit-large-patch14",
+)
+class CLIPViTLarge(BaseCLIPModel):
+    """Standard OpenAI CLIP with ViT-Large backbone"""
+    pass
+
+
+@register_model_runner(
+    "wkcn/TinyCLIP-ViT-40M-32-Text-19M-LAION400M",
+    description="TinyCLIP - efficient zero-shot classifier (~59M params total)",
+    link="https://huggingface.co/wkcn/TinyCLIP-ViT-40M-32-Text-19M-LAION400M",
+)
+class TinyCLIP(BaseCLIPModel):
+    """Lightweight CLIP variant - great for resource-constrained environments"""
+    DEFAULT_THRESHOLD = 0.50  # May need different threshold tuning
+    pass
+
+
+@register_model_runner(
+    "laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
+    description="CLIP ViT-Huge - highest accuracy zero-shot (~1B params)",
+    link="https://huggingface.co/laion/CLIP-ViT-H-14-laion2B-s32B-b79K",
+)
+class CLIPViTHuge(BaseCLIPModel):
+    """Largest CLIP variant trained on LAION-2B - best performance"""
+    DEFAULT_THRESHOLD = 0.60  # Larger models might need higher thresholds
+    pass
 
 
 # Helper to download and cache image
@@ -246,8 +274,10 @@ def get_image_file(tapis: Tapis, system: str, path: str) -> Image.Image:
         with open(local_path, "wb") as f:
             f.write(file_content)
 
-    return Image.open(local_path)
+    image = Image.open(local_path)
+    metadata = extract_image_metadata(local_path)
 
+    return image, metadata
 
 # Mapping the ImageNet-1k to larger categories
 CATEGORY_MAPPING = {
@@ -465,7 +495,7 @@ def run_model_on_tapis_images(
 
     for file in files:
         try:
-            image = get_image_file(tapis, file.systemId, file.path)
+            image, metadata = get_image_file(tapis, file.systemId, file.path)
             predictions = model.classify_image(image)
 
             # Always create detailed results
@@ -473,7 +503,8 @@ def run_model_on_tapis_images(
                 InferenceResult(
                     systemId=file.systemId,
                     path=file.path,
-                    predictions=predictions
+                    predictions=predictions,
+                    metadata=metadata
                 )
             )
 
