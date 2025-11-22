@@ -1,10 +1,11 @@
-export const Environment = {
+export const ImageInfEnvironment = {
   Local: 'local',
   Prod: 'prod',
   Pprd: 'pprd',
+  Unknown: 'unknown'
 };
 
-export type Environment = 'local' | 'prod' | 'pprd';
+export type ImageInfEnvironment = typeof ImageInfEnvironment[keyof typeof ImageInfEnvironment];
 
 interface Config {
   clientId: string;
@@ -26,10 +27,16 @@ const PprdConfig: Config = {
   host: 'https://pprd.imageinf-service.tacc.utexas.edu',
 };
 
+const UnknownConfig: Config = {
+  clientId: 'imageinf.pprd',
+  host: 'https://pprd.imageinf-service.tacc.utexas.edu',
+};
+
 const configs = {
-  [Environment.Local]: LocalConfig,
-  [Environment.Prod]: ProdConfig,
-  [Environment.Pprd]: PprdConfig,
+  [ImageInfEnvironment.Local]: LocalConfig,
+  [ImageInfEnvironment.Prod]: ProdConfig,
+  [ImageInfEnvironment.Pprd]: PprdConfig,
+  [ImageInfEnvironment.Unknown]: UnknownConfig,
 };
 
 export default configs;

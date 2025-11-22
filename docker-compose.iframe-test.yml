@@ -1,0 +1,15 @@
+services:
+  cep-test-portal:
+    image: nginx:alpine
+    container_name: cep_test_portal
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./local_conf/nginx.cep-test.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./local_conf/iframe-test.html:/usr/share/nginx/html/iframe-test.html:ro
+      - ./local_conf/cep.test.crt:/etc/ssl/cep.test.crt:ro
+      - ./local_conf/cep.test.key:/etc/ssl/cep.test.key:ro
+      - ./local_conf/dhparam.pem:/etc/ssl/dhparam.pem:ro
+    env_file:
+      - .env.iframe # Provides JWT_TOKEN for faked /api/auth/tapis

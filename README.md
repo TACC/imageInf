@@ -75,3 +75,7 @@ npm run dev
 Go to http://localhost:8080/
 
 For more info, see [Client README](client/README.md)
+
+
+### iframe Testing (CEP Simulation)
+Test how the SPA behaves when embedded in production. See the [iframe Testing Guide](README-IFRAME-TEST.md) for detailed setup instructions.

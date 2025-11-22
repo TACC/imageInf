@@ -11,16 +11,15 @@ const { TextArea } = Input;
 interface InferenceInterfaceProps {
   models: InferenceModelMeta[];
   token: string;
-  apiHost: string;
+  apiBasePath: string;
 }
 
-const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, apiHost }) => {
+const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, apiBasePath }) => {
   const [selectedFile, setSelectedFile] = useState<TapisFile | null>(curatedFileList[0]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
   const [result, setResult] = useState('');
 
-  const imageInfUrl = `${apiHost}/api`;
-  const inferenceMutation = useInference(token, imageInfUrl);
+  const inferenceMutation = useInference(token, apiBasePath);
 
   // Auto-select first model when models are loaded
   useEffect(() => {

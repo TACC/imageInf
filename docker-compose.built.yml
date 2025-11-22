@@ -1,0 +1,19 @@
+services:
+  imageinf:
+    container_name: imageinf_service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+
+  nginx:
+    image: nginx:alpine
+    container_name: imageinf_nginx_prod
+    ports:
+      - "8080:80"
+    volumes:
+      - ./local_conf/nginx.built.conf:/etc/nginx/nginx.conf:ro
+      - ./client/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - imageinf

@@ -27,42 +27,23 @@ const getHostFromIss = (iss: string): string => {
 };
 
 const isInIframe = (): boolean => {
-  return window.location !== window.parent.location;
+  return window.self !== window.top;
 };
 
-const getParentUrl = (): string | null => {
+const fetchTokenFromPortal = async (): Promise<string | null> => {
   if (!isInIframe()) {
     return null;
   }
 
-  // Try to get parent URL from referrer
-  if (document.referrer) {
-    try {
-      return new URL(document.referrer).origin;
-    } catch {
-      return null;
-    }
-  }
-  
-  return null;
-};
-
-const fetchTokenFromPortal = async (): Promise<string | null> => {
-  const parentUrl = getParentUrl();
-  debugger;
-  // TODO DROP
-  return "eyJhbGciOiJSUzI1NiIsImtpZCI6Imd5YU5uVXJJZGxsYkhkWU5vWEpoRE85NTZDa0pkbWdybURPSDJNZHNnclkiLCJ0eXAiOiJKV1QifQ.eyJqdGkiOiI3OTQwNDQ3ZS02ZDZkLTQ5Y2UtODdkYS0zODkzNzY2ZjQxYWEiLCJpc3MiOiJodHRwczovL3BvcnRhbHMudGFwaXMuaW8vdjMvdG9rZW5zIiwic3ViIjoibmF0aGFuZkBwb3J0YWxzIiwidGFwaXMvdGVuYW50X2lkIjoicG9ydGFscyIsInRhcGlzL3Rva2VuX3R5cGUiOiJhY2Nlc3MiLCJ0YXBpcy9kZWxlZ2F0aW9uIjpmYWxzZSwidGFwaXMvZGVsZWdhdGlvbl9zdWIiOm51bGwsInRhcGlzL3VzZXJuYW1lIjoibmF0aGFuZiIsInRhcGlzL2FjY291bnRfdHlwZSI6InVzZXIiLCJleHAiOjE3NjEzMzI4ODksInRhcGlzL2NsaWVudF9pZCI6IlBST0QuRlJPTlRFUkEiLCJ0YXBpcy9ncmFudF90eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwidGFwaXMvcmVkaXJlY3RfdXJpIjoiaHR0cHM6Ly9mcm9udGVyYS1wb3J0YWwudGFjYy51dGV4YXMuZWR1L2F1dGgvdGFwaXMvY2FsbGJhY2svIiwidGFwaXMvcmVmcmVzaF9jb3VudCI6MH0.tYZK6lhKikO1iuOD6rIgcJO9okP93gAd0qSgxUNjcNZTeRcGNw4s64HEUNEvdga6z4nYoGwxBq6AU8lAbjk91CWsvXrCLAEZQXvbSROW_yBqVPpdlrPK4Nmww1YTZB2wkLbUJB-cYQBywvMHO29vPqrRoT0WyAm9Yygmd2c6KUS1Y4Wl3KHSJ4jWDVpOQpwcmh3TZSKBDr1x1nYWtnuppNr2AWkQ7ZKIPpU_fQ3NmRBs4_MuDuWVpRFaKNm2s1V-mSrK4Fd9yDQMjSKH0PRiDnJBdgasfi0R2Q29cJBsUAT0UJC1Y4XDvgsUSfL7KK2q6JCcn0dxGt48Q1to85ohtA";
-
-  if (!parentUrl) {
-    return null;
-  }
-
   try {
-    const response = await fetch(`${parentUrl}/auth/tapis/`, {
+    // Since we're on the same domain (via an iframe), use relative path
+    // The cookie will be sent automatically with credentials: 'include'
+    const response = await fetch('/auth/tapis/', {
       credentials: 'include',
     });
 
     if (!response.ok) {
+      console.warn('Failed to fetch token from portal:', response.status);
       return null;
     }
 
@@ -80,7 +61,18 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
     const decodedToken = jwtDecode<TapisJwtPayload>(token);
     const tapisHost = `https://${getHostFromIss(decodedToken.iss)}`;
 
-    // Check user info to confirm valid token
+    // Check if token is expired
+    const now = Date.now() / 1000;
+    if (decodedToken.exp < now) {
+      console.warn('Token is expired');
+      return {
+        token: '',
+        tapisHost: fallbackHost,
+        isValid: false,
+      };
+    }
+
+    // Validate token with API
     const response = await fetch(`${tapisHost}/v3/oauth2/userinfo`, {
       headers: {
         'X-Tapis-Token': token,
@@ -88,6 +80,7 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
     });
 
     if (!response.ok) {
+      console.warn('Token validation failed:', response.status);
       return {
         token: '',
         tapisHost: fallbackHost,
@@ -100,7 +93,8 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
       tapisHost,
       isValid: true,
     };
-  } catch {
+  } catch (error) {
+    console.error('Token validation error:', error);
     return {
       token: '',
       tapisHost: fallbackHost,
@@ -117,14 +111,24 @@ const getToken = async (fallbackHost: string): Promise<TokenInfo> => {
     // Validate the portal token
     const result = await validateTokenAndGetHost(tokenFromCorePortal, fallbackHost);
     if (result.isValid) {
+      // Store in sessionStorage for subsequent requests
       sessionStorage.setItem('access_token', tokenFromCorePortal);
-      // TODO 1 hr from now. but should be derived from JWT
-      sessionStorage.setItem('expires_at', (Date.now() + 3600000).toString());
+
+      // Extract expiry from JWT
+      try {
+        const decoded = jwtDecode<TapisJwtPayload>(tokenFromCorePortal);
+        sessionStorage.setItem('expires_at', (decoded.exp * 1000).toString());
+      } catch {
+        console.warn('Failed to decode JWT for expiry');
+        // Fallback to 1 hour
+        sessionStorage.setItem('expires_at', (Date.now() + 3600000).toString());
+      }
+
       return result;
     }
   }
 
-  // Fall back to sessionStorage (in case already logged)
+  // Fall back to sessionStorage (for direct access or cached token)
   const token = sessionStorage.getItem('access_token');
   const expiresAt = sessionStorage.getItem('expires_at');
 
