@@ -21,21 +21,17 @@ deploy:
 start:
 	docker-compose up
 
-# Built client mode (for iframe testing)
-start-built:
-	cd client && npm run build && cd .. && docker-compose -f docker-compose.built.yml up
-
-stop-built:
-	docker-compose -f docker-compose.built.yml down
+setup-tapis-token:
+	@echo "Getting tapis token for iframe cep.test"
+	@docker run -it --rm -v $(PWD):/app taccwma/imageinf:local python /app/scripts/setup_iframe_token.py
 
 # Run like a demo cep.test with iframe
-start-iframe-test:
-	docker-compose -f docker-compose.iframe-test.yml up
+start-iframe-cep-test-simulation:
+	docker-compose -f docker-compose.iframe-cep-test-simulation.yml up
 
-stop-iframe-test:
-	docker-compose -f docker-compose.iframe-test.yml down
+stop-iframe-cep-test-simulation:
+	docker-compose -f docker-compose.iframe-cep-test-simulation.yml down
 
 stop:
 	docker-compose down
-	$(MAKE) stop-built
-	$(MAKE) stop-iframe-test
+	$(MAKE) stop-iframe-cep-test-simulation

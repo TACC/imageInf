@@ -38,7 +38,7 @@ const fetchTokenFromPortal = async (): Promise<string | null> => {
   try {
     // Since we're on the same domain (via an iframe), use relative path
     // The cookie will be sent automatically with credentials: 'include'
-    const response = await fetch('/auth/tapis/', {
+    const response = await fetch('/api/auth/tapis/', {
       credentials: 'include',
     });
 

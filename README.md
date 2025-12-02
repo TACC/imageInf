@@ -78,4 +78,4 @@ For more info, see [Client README](client/README.md)
 
 
 ### iframe Testing (CEP Simulation)
-Test how the SPA behaves when embedded in production. See the [iframe Testing Guide](README-IFRAME-TEST.md) for detailed setup instructions.
+Test how the SPA behaves when embedded in production (like within a CEP portal). See the [iframe Testing Guide](README-IFRAME-TEST.md) for detailed setup instructions.
