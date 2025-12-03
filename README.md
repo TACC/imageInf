@@ -39,7 +39,7 @@ Go to:  `http://localhost:8080/api/status`
 With the `imageinf` service running via Docker, you can open a shell inside the container to run tests:
 
 ```bash
-docker exec -it imageinf bash
+docker exec -it imageinf_service bash
 ```
 
 ### Run Tests
