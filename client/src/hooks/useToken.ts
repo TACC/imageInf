@@ -106,7 +106,7 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
 const getToken = async (fallbackHost: string): Promise<TokenInfo> => {
   // First, try to get token from parent portal (if in iframe)
   const tokenFromCorePortal = await fetchTokenFromPortal();
-  
+
   if (tokenFromCorePortal) {
     // Validate the portal token
     const result = await validateTokenAndGetHost(tokenFromCorePortal, fallbackHost);

@@ -2,10 +2,10 @@ export const ImageInfEnvironment = {
   Local: 'local',
   Prod: 'prod',
   Pprd: 'pprd',
-  Unknown: 'unknown'
+  Unknown: 'unknown',
 };
 
-export type ImageInfEnvironment = typeof ImageInfEnvironment[keyof typeof ImageInfEnvironment];
+export type ImageInfEnvironment = (typeof ImageInfEnvironment)[keyof typeof ImageInfEnvironment];
 
 interface Config {
   clientId: string;

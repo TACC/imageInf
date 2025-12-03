@@ -16,7 +16,7 @@ export const MainPage = () => {
   const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
   const { data: models, isLoading: modelsLoading } = useInferenceModel(
     tokenData?.token ?? '',
-    config.apiBasePath,
+    config.apiBasePath
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -92,7 +92,11 @@ export const MainPage = () => {
         </Row>
       </Header>
       <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
-        <InferenceInterface models={models} token={tokenData.token} apiBasePath={config.apiBasePath} />
+        <InferenceInterface
+          models={models}
+          token={tokenData.token}
+          apiBasePath={config.apiBasePath}
+        />
       </Content>
       <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
         <Button

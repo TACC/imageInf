@@ -17,8 +17,8 @@ export const getApiBaseUrl = () => {
     return `${match[1]}/api`;
   }
 
-  console.error("Did not find /imageinf/ in pathname:", pathname);
-  return '/api';  // fallback
+  console.error('Did not find /imageinf/ in pathname:', pathname);
+  return '/api'; // fallback
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -40,7 +40,7 @@ const getEnv = (): ImageInfEnvironment => {
 export const useConfig = () => {
   const env = getEnv();
   const config = configs[env];
-  
+
   return {
     ...config,
     apiBasePath: API_BASE_URL,
