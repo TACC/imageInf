@@ -20,12 +20,15 @@ class ImageMetadata(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     altitude: Optional[float] = None
+    camera_make: Optional[str] = None
+    camera_model: Optional[str] = None
 
 
 class InferenceResult(BaseModel):
     systemId: str
     path: str
     predictions: List[Prediction]
+    metadata: Optional[ImageMetadata] = None
 
 
 class InferenceResponse(BaseModel):
