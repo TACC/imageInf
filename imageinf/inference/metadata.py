@@ -10,46 +10,48 @@ def extract_image_metadata(image_path: str) -> Optional[ImageMetadata]:
     More robust than PIL's built-in EXIF parser.
     """
     try:
-        with open(image_path, 'rb') as f:
+        with open(image_path, "rb") as f:
             tags = exifread.process_file(f, details=False)
 
         if not tags:
             return None
 
         metadata = {
-            'date_taken': None,
-            'latitude': None,
-            'longitude': None,
-            'altitude': None,
-            'camera_make': None,
-            'camera_model': None
+            "date_taken": None,
+            "latitude": None,
+            "longitude": None,
+            "altitude": None,
+            "camera_make": None,
+            "camera_model": None,
         }
 
         # Date taken
-        if 'EXIF DateTimeOriginal' in tags:
+        if "EXIF DateTimeOriginal" in tags:
             try:
-                date_str = str(tags['EXIF DateTimeOriginal'])
-                metadata['date_taken'] = datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
+                date_str = str(tags["EXIF DateTimeOriginal"])
+                metadata["date_taken"] = datetime.strptime(
+                    date_str, "%Y:%m:%d %H:%M:%S"
+                )
             except (ValueError, TypeError) as e:
                 print(f"Could not parse date: {e}")
 
         # Camera info
-        if 'Image Make' in tags:
-            metadata['camera_make'] = str(tags['Image Make'])
-        if 'Image Model' in tags:
-            metadata['camera_model'] = str(tags['Image Model'])
+        if "Image Make" in tags:
+            metadata["camera_make"] = str(tags["Image Make"])
+        if "Image Model" in tags:
+            metadata["camera_model"] = str(tags["Image Model"])
 
         # GPS coordinates - exifread provides helper for this!
         lat, lon = _extract_gps_from_exifread(tags)
         if lat is not None and lon is not None:
-            metadata['latitude'] = lat
-            metadata['longitude'] = lon
+            metadata["latitude"] = lat
+            metadata["longitude"] = lon
 
         # Altitude
-        if 'GPS GPSAltitude' in tags:
+        if "GPS GPSAltitude" in tags:
             try:
-                alt_rational = tags['GPS GPSAltitude'].values[0]
-                metadata['altitude'] = float(alt_rational.num) / float(alt_rational.den)
+                alt_rational = tags["GPS GPSAltitude"].values[0]
+                metadata["altitude"] = float(alt_rational.num) / float(alt_rational.den)
             except (AttributeError, ZeroDivisionError, IndexError):
                 pass
         print(metadata)
@@ -67,15 +69,15 @@ def _extract_gps_from_exifread(tags: dict) -> Tuple[Optional[float], Optional[fl
     """
     try:
         # Check if GPS data exists
-        if 'GPS GPSLatitude' not in tags or 'GPS GPSLongitude' not in tags:
+        if "GPS GPSLatitude" not in tags or "GPS GPSLongitude" not in tags:
             return None, None
 
-        lat_ref = str(tags.get('GPS GPSLatitudeRef', 'N'))
-        lon_ref = str(tags.get('GPS GPSLongitudeRef', 'E'))
+        lat_ref = str(tags.get("GPS GPSLatitudeRef", "N"))
+        lon_ref = str(tags.get("GPS GPSLongitudeRef", "E"))
 
         # exifread provides GPS values as list of IfdTag objects with .values attribute
-        lat_values = tags['GPS GPSLatitude'].values
-        lon_values = tags['GPS GPSLongitude'].values
+        lat_values = tags["GPS GPSLatitude"].values
+        lon_values = tags["GPS GPSLongitude"].values
 
         # Convert to decimal
         def dms_to_decimal(dms_values, ref):
@@ -93,7 +95,7 @@ def _extract_gps_from_exifread(tags: dict) -> Tuple[Optional[float], Optional[fl
 
                 decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
 
-                if ref in ['S', 'W']:
+                if ref in ["S", "W"]:
                     decimal = -decimal
 
                 return decimal

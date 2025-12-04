@@ -12,8 +12,10 @@ class Prediction(BaseModel):
     label: str
     score: float
 
+
 class ImageMetadata(BaseModel):
     """Metadata extracted from image EXIF data"""
+
     date_taken: Optional[datetime] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
@@ -31,6 +33,7 @@ class InferenceResponse(BaseModel):
     aggregated_results: List[InferenceResult]
     results: List[InferenceResult]
     metadata: Optional[ImageMetadata] = None
+
 
 class InferenceRequest(BaseModel):
     inferenceType: str = "classification"
