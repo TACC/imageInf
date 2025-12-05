@@ -1,7 +1,7 @@
 import exifread
 from typing import Optional, Tuple
 from datetime import datetime
-from .models import ImageMetadata
+from imageinf.inference.models import ImageMetadata
 
 
 def extract_image_metadata(image_path: str) -> Optional[ImageMetadata]:

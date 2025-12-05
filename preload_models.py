@@ -1,4 +1,5 @@
 """Pre-download all registered models to cache"""
+
 import os
 from imageinf.inference.processor import MODEL_REGISTRY
 
