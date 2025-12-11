@@ -14,7 +14,7 @@ export const getApiBaseUrl = () => {
   const match = pathname.match(/^(.*?\/imageinf)/);
 
   if (match) {
-    return `${match[1]}/api`;
+    return `${match[1]}`;
   }
 
   console.error('Did not find /imageinf/ in pathname:', pathname);

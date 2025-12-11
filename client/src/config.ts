@@ -13,7 +13,7 @@ interface Config {
 }
 
 const LocalConfig: Config = {
-  clientId: 'imageinf.localdev',
+  clientId: 'imageinf.localdev.ui',
   host: 'http://localhost:8080',
 };
 
