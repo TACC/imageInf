@@ -7,6 +7,7 @@ from tapipy.tapis import Tapis
 from transformers import ViTForImageClassification, ViTImageProcessor
 
 from .models import TapisFile, InferenceResult, Prediction, InferenceResponse
+from imageinf.utils.auth import TapisUser
 
 CACHE_DIR = "cache_images"  # TODO add periodic cleanup
 MODEL_NAME = "google/vit-base-patch16-224"  # TODO generalize
@@ -74,13 +75,13 @@ def get_image_file(tapis: Tapis, system: str, path: str) -> Image.Image:
 
 # Public interface: plugin dispatch
 def run_model_on_tapis_images(
-    files: List[TapisFile], jwt_token: str, model_name: str = MODEL_NAME
+    files: List[TapisFile], user: TapisUser, model_name: str = MODEL_NAME
 ) -> InferenceResponse:
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{model_name}' is not supported.")
     ModelClass = MODEL_REGISTRY[model_name]
     model = ModelClass(model_name)
-    tapis = Tapis(base_url="https://designsafe.tapis.io", access_token=jwt_token)
+    tapis = Tapis(base_url=user.tenant_host, access_token=user.tapis_token)
 
     results = []
     for file in files:

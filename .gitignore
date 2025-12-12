@@ -179,3 +179,6 @@ cython_debug/
 
 # imageinf specific files
 cache_images
+
+# Env files
+.env.iframe
