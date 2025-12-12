@@ -10,7 +10,7 @@ const Login = () => {
     const state = Math.random().toString(36).substring(7);
     sessionStorage.setItem('oauth_state', state);
 
-    // TODO Support multiple Tapis tenants; currently we do if it is client is iframed under a CEP portal
+    // TODO Support multiple Tapis tenants; we support multi-tenancy if the client is iframed under a CEP portal
     const authUrl = new URL('https://designsafe.tapis.io/v3/oauth2/authorize');
     authUrl.searchParams.append('client_id', config.clientId);
     authUrl.searchParams.append(

@@ -3,23 +3,29 @@ import { Row, Col, Select, Divider, Input } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import TapisFileView from './TapisFileView';
 import { useInference } from '../hooks/useInference';
+import type { TokenInfo } from '../hooks/useToken';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
-import { curatedFileList } from '../utils/examples';
+import { getCuratedFileList } from '../utils/examples';
 
 const { TextArea } = Input;
 
 interface InferenceInterfaceProps {
   models: InferenceModelMeta[];
-  token: string;
+  tokenInfo: TokenInfo;
   apiBasePath: string;
 }
 
-const InferenceInterface: React.FC<InferenceInterfaceProps> = ({ models, token, apiBasePath }) => {
+const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
+  models,
+  tokenInfo,
+  apiBasePath,
+}) => {
+  const curatedFileList = getCuratedFileList(tokenInfo.tapisHost);
   const [selectedFile, setSelectedFile] = useState<TapisFile | null>(curatedFileList[0]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
   const [result, setResult] = useState('');
 
-  const inferenceMutation = useInference(token, apiBasePath);
+  const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
 
   // Auto-select first model when models are loaded
   useEffect(() => {

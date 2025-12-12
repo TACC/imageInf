@@ -104,7 +104,7 @@ export const MainPage = () => {
       <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
         <InferenceInterface
           models={models}
-          token={tokenData.token}
+          tokenInfo={tokenData}
           apiBasePath={config.apiBasePath}
         />
       </Content>

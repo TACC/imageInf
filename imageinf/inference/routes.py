@@ -43,6 +43,6 @@ def run_sync_inference(
         raise HTTPException(400, detail="Too many files. Use async endpoint for >5.")
 
     try:
-        return run_model_on_tapis_images(request.files, user.tapis_token, request.model)
+        return run_model_on_tapis_images(request.files, user, request.model)
     except ValueError as e:
         raise HTTPException(400, detail=str(e))

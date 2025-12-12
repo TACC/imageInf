@@ -66,14 +66,13 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
             )
 
         parsed_url = urlparse(issuer)
-        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        tenant_host = parsed_url.netloc
+        tenant_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-        if base_url not in ALLOWED_TAPIS_TENANTS:
-            logger.error(f"Unauthorized Tapis tenant: {base_url}")
+        if tenant_host not in ALLOWED_TAPIS_TENANTS:
+            logger.error(f"Unauthorized Tapis tenant: {tenant_host}")
             raise HTTPException(status_code=401, detail="Unauthorized Tapis tenant")
 
-        tapis_client = Tapis(base_url=base_url)
+        tapis_client = Tapis(base_url=tenant_host)
         validation_response = tapis_client.validate_token(token)
 
         username = validation_response.get("tapis/username")

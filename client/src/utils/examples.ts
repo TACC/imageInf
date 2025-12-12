@@ -1,16 +1,19 @@
 import type { TapisFile } from '../types/inference';
 
-export const curatedFileList: TapisFile[] = [
+export const designsafeCuratedFileList: TapisFile[] = [
   {
-    /*PRJ-2113 | StEER - Hurricane Michael*/ systemId: 'designsafe.storage.published',
+    /*PRJ-2113 | StEER - Hurricane Michael*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-2113/D6.2 Other Ground Based Imagery - RAPID EF/06_Waterfront Appartments_20181108/Canon Photos/1A7A1046.JPG',
   },
   {
-    /*PRJ-2113 | StEER - Hurricane Michael*/ systemId: 'designsafe.storage.published',
+    /*PRJ-2113 | StEER - Hurricane Michael*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-2113/D6.2 Other Ground Based Imagery - RAPID EF/06_Waterfront Appartments_20181108/Canon Photos/1A7A1047.JPG',
   },
   {
-    /*PRJ-2113 | StEER - Hurricane Michael*/ systemId: 'designsafe.storage.published',
+    /*PRJ-2113 | StEER - Hurricane Michael*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-2113/D6.2 Other Ground Based Imagery - RAPID EF/02_Water Tower_20181107/Canon Photos/Scene/1A7A0844.JPG',
   },
   {
@@ -39,19 +42,23 @@ export const curatedFileList: TapisFile[] = [
     path: '/PRJ-3252/Germany (August 9-13, 2021)/Bliesheim - Bridge Merowingerstr (August 10)/Photos/NStark/20210810_105642.jpg',
   },
   {
-    /* PRJ-3379 | GEER - Marshall Fire, Colorado */ systemId: 'designsafe.storage.published',
+    /* PRJ-3379 | GEER - Marshall Fire, Colorado */
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-3379/RApp/uwrapid/Home/Photo 1642618419.jpg',
   },
   {
-    /*GEER - 2025 Los Angeles Wildfires*/ systemId: 'designsafe.storage.published',
+    /*GEER - 2025 Los Angeles Wildfires*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-5857/Mission 05/Pacific Palisades/Photos/Craig Davis/IMG_6649.JPG',
   },
   {
-    /*GEER - 2025 Los Angeles Wildfires*/ systemId: 'designsafe.storage.published',
+    /*GEER - 2025 Los Angeles Wildfires*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-5857/Mission 05/Pacific Palisades/Photos/Marty Hudson/2025-02-08-12-57-24.jpg',
   },
   {
-    /*GEER - 2025 Los Angeles Wildfires*/ systemId: 'designsafe.storage.published',
+    /*GEER - 2025 Los Angeles Wildfires*/
+    systemId: 'designsafe.storage.published',
     path: '/PRJ-5857/Mission 05/Pacific Palisades/Photos/Marty Hudson/2025-02-08-12-56-57.jpg',
   },
   {
@@ -66,3 +73,18 @@ export const curatedFileList: TapisFile[] = [
     path: '/PRJ-bar/foojpg',
   },*/
 ];
+
+export const getCuratedFileList = (tapisHost: string): TapisFile[] => {
+  if (tapisHost === 'https://designsafe.tapis.io') {
+    return designsafeCuratedFileList;
+  }
+
+  // For other hosts (assuming portals.tapis.io), use cloud.data system with ImageInf Gallery path
+  return designsafeCuratedFileList.map((file) => {
+    const filename = file.path.split('/').pop();
+    return {
+      systemId: 'cloud.data',
+      path: `/corral/tacc/aci/CEP/community/ImageInf%20Gallery/DesignSafe_curated_set/${filename}`,
+    };
+  });
+};

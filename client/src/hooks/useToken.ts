@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useConfig } from './useConfig';
 import { jwtDecode } from 'jwt-decode';
 
-interface TokenInfo {
+export interface TokenInfo {
   token: string;
   tapisHost: string;
   isValid: boolean;
