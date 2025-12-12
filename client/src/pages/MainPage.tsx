@@ -14,10 +14,12 @@ export const MainPage = () => {
   const navigate = useNavigate();
   const config = useConfig();
   const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
-  const { data: models, isLoading: modelsLoading,  isError: modelsError, error: modelsErrorDetail} = useInferenceModel(
-    tokenData?.token ?? '',
-    config.apiBasePath
-  );
+  const {
+    data: models,
+    isLoading: modelsLoading,
+    isError: modelsError,
+    error: modelsErrorDetail,
+  } = useInferenceModel(tokenData?.token ?? '', config.apiBasePath);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
@@ -27,12 +29,12 @@ export const MainPage = () => {
   }, [isError, tokenData, tokenLoading, navigate]);
 
   if (modelsError) {
-  return (
-    <div style={{ color: '#ff4d4f', fontSize: 24, textAlign: 'center' }}>
-      Failed to load models: {modelsErrorDetail?.message || 'Unkown Error'}
-    </div>
-  );
-}
+    return (
+      <div style={{ color: '#ff4d4f', fontSize: 24, textAlign: 'center' }}>
+        Failed to load models: {modelsErrorDetail?.message || 'Unkown Error'}
+      </div>
+    );
+  }
 
   if (tokenLoading || modelsLoading || !models || !tokenData) {
     return (

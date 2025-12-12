@@ -13,7 +13,10 @@ const Login = () => {
     // TODO Support multiple Tapis tenants; currently we do if it is client is iframed under a CEP portal
     const authUrl = new URL('https://designsafe.tapis.io/v3/oauth2/authorize');
     authUrl.searchParams.append('client_id', config.clientId);
-    authUrl.searchParams.append('redirect_uri', `${window.location.origin}/imageinf/ui/auth/callback/`);
+    authUrl.searchParams.append(
+      'redirect_uri',
+      `${window.location.origin}/imageinf/ui/auth/callback/`
+    );
     authUrl.searchParams.append('response_type', 'token');
 
     // TODO tapis not supporting at the moment
