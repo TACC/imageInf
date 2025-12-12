@@ -31,7 +31,7 @@ def main():
     for key, site in TAPIS_SITES.items():
         print(f"  {key}) {site['name']} ({site['url']})")
 
-    site_choice = input("\nEnter choice (1-3): ").strip()
+    site_choice = input("\nEnter choice (1-2): ").strip()
 
     if site_choice not in TAPIS_SITES:
         print("Invalid choice. Exiting.")
@@ -62,7 +62,7 @@ def main():
         env_file.write_text(f"JWT_TOKEN={jwt_token}\n")
 
         print(f"\n✓ Token written to {env_file}")
-        print("\nYou can now run: make start-iframe-test")
+        print("\nYou can now run: make start-iframe-cep-test-simulation")
 
     except Exception as e:
         print(f"\n✗ Error: {e}")
