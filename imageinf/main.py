@@ -9,8 +9,7 @@ from imageinf.inference.routes import router as inference_router
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logging.getLogger("imageinf").setLevel(getattr(logging, log_level))

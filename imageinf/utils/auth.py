@@ -111,7 +111,9 @@ def get_tapis_user(x_tapis_token: Optional[str] = Header(None)) -> TapisUser:
     if not x_tapis_token:
         raise HTTPException(status_code=401, detail="Missing X-Tapis-Token")
     data = _validate_tapis_token(x_tapis_token)
-    logger.debug(f"Got Tapis user: {data['username']} tenant_host:{data['tenant_host']}")
+    logger.debug(
+        f"Got Tapis user: {data['username']} tenant_host:{data['tenant_host']}"
+    )
     return TapisUser(
         username=data["username"],
         tapis_token=data["tapis_token"],
