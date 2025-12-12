@@ -9,7 +9,7 @@ const Callback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // TODO: Tapis should return in query param instead of fragment
+        // TODO: Tapis should return in fragment instead of query param
         // const fragment = window.location.hash.substring(1); // Remove the # character
         // const params = new URLSearchParams(fragment);
 

@@ -1,0 +1,58 @@
+# HTTP server (redirects to HTTPS)
+server {
+    listen 80;
+    server_name cep.test;
+
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl;
+    server_name cep.test;
+
+    ssl_certificate /etc/ssl/cep.test.crt;
+    ssl_certificate_key /etc/ssl/cep.test.key;
+    ssl_dhparam /etc/ssl/dhparam.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Portal home page with iframe
+    location = / {
+        root /usr/share/nginx/html;
+        try_files /iframe-test.html =404;
+        add_header Content-Type text/html;
+    }
+
+    # CEP's own auth API
+    location /api/auth/tapis/ {
+        add_header Content-Type application/json;
+        add_header Access-Control-Allow-Origin "https://cep.test" always;
+        add_header Access-Control-Allow-Credentials "true" always;
+        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+
+        return 200 '{"token":"${JWT_TOKEN}"}';
+    }
+
+    # Proxy everything under /imageinf/ to the service
+    # No rewriting needed - just pass through!
+    location /imageinf/ {
+        proxy_pass http://host.docker.internal:8080/imageinf/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Cookie $http_cookie;
+
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

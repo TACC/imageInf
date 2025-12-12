@@ -1,5 +1,7 @@
+
 from typing import List
 from tapipy.tapis import Tapis
+from imageinf.utils.auth import TapisUser
 
 from imageinf.utils.io import get_image_file
 
@@ -13,16 +15,15 @@ from . import vit_models  # noqa: F401
 from . import clip_models  # noqa: F401
 
 
+# Public interface: plugin dispatch
 def run_model_on_tapis_images(
-    files: List[TapisFile], jwt_token: str, model_name: str = DEFAULT_MODEL_NAME
+    files: List[TapisFile], user: TapisUser, model_name: str = DEFAULT_MODEL_NAME
 ) -> InferenceResponse:
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{model_name}' is not supported.")
     ModelClass = MODEL_REGISTRY[model_name]
     model = ModelClass(model_name)
-
-    # TODO derive base url from valid token (i.e. could be designsafe or portals tenant)
-    tapis = Tapis(base_url="https://designsafe.tapis.io", access_token=jwt_token)
+    tapis = Tapis(base_url=user.tenant_host, access_token=user.tapis_token)
 
     results = []
     aggregated_results = []

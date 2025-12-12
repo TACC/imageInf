@@ -50,7 +50,7 @@ Go to:  `http://localhost:8080/api/status`
 With the `imageinf` service running via Docker, you can open a shell inside the container to run tests:
 
 ```bash
-docker exec -it imageinf bash
+docker exec -it imageinf_service bash
 ```
 
 ### Run Tests
@@ -86,3 +86,7 @@ npm run dev
 Go to http://localhost:8080/
 
 For more info, see [Client README](client/README.md)
+
+
+### iframe Testing (CEP Simulation)
+Test how the SPA behaves when embedded in production (like within a CEP portal). See the [iframe Testing Guide](README-IFRAME-TEST.md) for detailed setup instructions.

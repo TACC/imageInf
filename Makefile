@@ -27,5 +27,17 @@ preload_and_start: preload start
 start:
 	docker-compose up
 
+setup-tapis-token:
+	@echo "Getting tapis token for iframe cep.test"
+	@docker run -it --rm -v $(PWD):/app taccwma/imageinf:local python /app/scripts/setup_iframe_token.py
+
+# Run like a demo cep.test with iframe
+start-iframe-cep-test-simulation:
+	docker-compose -f docker-compose.iframe-cep-test-simulation.yml up
+
+stop-iframe-cep-test-simulation:
+	docker-compose -f docker-compose.iframe-cep-test-simulation.yml down
+
 stop:
 	docker-compose down
+	$(MAKE) stop-iframe-cep-test-simulation

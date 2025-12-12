@@ -14,7 +14,12 @@ export const MainPage = () => {
   const navigate = useNavigate();
   const config = useConfig();
   const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
-  const { data: models, isLoading: modelsLoading } = useInferenceModel(tokenData?.token ?? '');
+  const {
+    data: models,
+    isLoading: modelsLoading,
+    isError: modelsError,
+    error: modelsErrorDetail,
+  } = useInferenceModel(tokenData?.token ?? '', config.apiBasePath);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
@@ -22,6 +27,14 @@ export const MainPage = () => {
       navigate('/login');
     }
   }, [isError, tokenData, tokenLoading, navigate]);
+
+  if (modelsError) {
+    return (
+      <div style={{ color: '#ff4d4f', fontSize: 24, textAlign: 'center' }}>
+        Failed to load models: {modelsErrorDetail?.message || 'Unkown Error'}
+      </div>
+    );
+  }
 
   if (tokenLoading || modelsLoading || !models || !tokenData) {
     return (
@@ -89,7 +102,11 @@ export const MainPage = () => {
         </Row>
       </Header>
       <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
-        <InferenceInterface models={models} token={tokenData.token} apiHost={config.host} />
+        <InferenceInterface
+          models={models}
+          tokenInfo={tokenData}
+          apiBasePath={config.apiBasePath}
+        />
       </Content>
       <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
         <Button
