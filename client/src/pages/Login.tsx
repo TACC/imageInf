@@ -25,17 +25,21 @@ const Login = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-      }}
-    >
-      <Button type="primary" size="large" onClick={handleLogin}>
-        Login
-      </Button>
+    <div>
+      <h3>Image Inferencing Service Login</h3>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'top',
+          minHeight: '100vh',
+          marginTop: '1rem',
+        }}
+      >
+        <Button type="primary" size="large" onClick={handleLogin}>
+          Login
+        </Button>
+      </div>
     </div>
   );
 };
