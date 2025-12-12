@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 import type { InferenceRequest, InferenceResponse } from '../types/inference';
 
-export const useInference = (tapisToken: string, imageInfUrl: string) => {
+export const useInference = (tapisToken: string, apiBasePath: string) => {
   return useMutation({
     mutationFn: async (inferenceRequest: InferenceRequest) => {
-      const response = await fetch(`${imageInfUrl}/inference/sync`, {
+      const response = await fetch(`${apiBasePath}/api/inference/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

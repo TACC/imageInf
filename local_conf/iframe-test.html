@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEP iframe Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            background: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 2px solid #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CEP Portal - iframe Test</h1>
+    <div class="info">
+        <p><strong>Portal URL:</strong> https://cep.test/</p>
+        <p><strong>App in iframe:</strong> https://cep.test/imageinf/ui/</p>
+        <p><strong>Service URLs:</strong></p>
+        <ul>
+            <li>UI: http://localhost:8080/imageinf/ui/</li>
+            <li>API: http://localhost:8080/imageinf/api/</li>
+        </ul>
+    </div>
+    <iframe src="/imageinf/ui/" title="ImageInf Application"></iframe>
+</body>
+</html>
