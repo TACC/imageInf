@@ -5,6 +5,9 @@ services:
   imageinf:
     image: taccwma/imageinf:local
     container_name: imageinf_service
+    environment:
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
     volumes:
       - .:/app
       - ~/.cache/huggingface:/root/.cache/huggingface
