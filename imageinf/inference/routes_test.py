@@ -84,8 +84,32 @@ def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
     assert "longitude" in result["metadata"]
     assert "camera_make" in result["metadata"]
 
-    # TODO ADD JIRA
-    # assert result["metadata"]["longitude"] is not None
+    assert result["metadata"]["longitude"] is None
+    assert result["metadata"]["latitude"] is None
+
+
+def test_sync_inference_one_image_with_location(
+    client_authed, mock_tapis_files_with_location, mock_vit
+):
+    payload = {
+        "inferenceType": "classification",
+        "files": [
+            {
+                "systemId": "designsafe.storage.default",
+                "path": "/path/to/test-image.jpg",
+            }
+        ],
+        "model": "google/vit-base-patch16-224",
+    }
+    response = client_authed.post("/inference/sync", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+
+    result = data["results"][0]
+    assert result["metadata"] == {}
+    # TODO broken; to be fixed and tested in https://tacc-main.atlassian.net/browse/WG-570
+    # assert result["metadata"]["longitude"] is None
     # assert result["metadata"]["latitude"] is not None
 
 

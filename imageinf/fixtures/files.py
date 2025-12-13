@@ -3,7 +3,14 @@ from pathlib import Path
 
 
 @pytest.fixture
-def mock_photo_file():
+def mock_photo_file_without_location():
+    file_path = Path(__file__).parent / "./files/Photo 1642618419.jpg"
+    with open(file_path.resolve(), "rb") as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_photo_file_with_location():
     file_path = Path(__file__).parent / "./files/Photo 1642618419.jpg"
     with open(file_path.resolve(), "rb") as f:
         return f.read()

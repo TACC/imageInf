@@ -33,10 +33,27 @@ def mock_tapis_auth(monkeypatch):
 
 
 @pytest.fixture
-def mock_tapis_files(monkeypatch, mock_photo_file):
+def mock_tapis_files(monkeypatch, mock_photo_file_without_location):
     mock_client = MagicMock()
     mock_files = MagicMock()
-    mock_files.getContents.side_effect = lambda systemId, path: mock_photo_file
+    mock_files.getContents.side_effect = (
+        lambda systemId, path: mock_photo_file_without_location
+    )
+    mock_client.files = mock_files
+
+    monkeypatch.setattr(
+        "imageinf.inference.processor.Tapis", lambda *a, **kw: mock_client
+    )
+    return mock_client
+
+
+@pytest.fixture
+def mock_tapis_files_with_location(monkeypatch, mock_photo_file_with_location):
+    mock_client = MagicMock()
+    mock_files = MagicMock()
+    mock_files.getContents.side_effect = (
+        lambda systemId, path: mock_photo_file_with_location
+    )
     mock_client.files = mock_files
 
     monkeypatch.setattr(
