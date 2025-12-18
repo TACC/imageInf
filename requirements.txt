@@ -11,4 +11,3 @@ pytest
 pytest-cov
 black
 flake8
-exifread
