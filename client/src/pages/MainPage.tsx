@@ -54,11 +54,11 @@ export const MainPage = () => {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#242424' }}>
+    <Layout style={{ minHeight: '80vh', background: '#242424' }}>
       <Header
         style={{
           background: 'transparent',
-          padding: '0 32px',
+          padding: '0 2rem',
           position: 'relative',
           minHeight: 100,
           display: 'flex',
@@ -101,18 +101,18 @@ export const MainPage = () => {
           </Col>
         </Row>
       </Header>
-      <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '40px 16px 0 16px' }}>
+      <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '3rem 1rem 0 1rem' }}>
         <InferenceInterface
           models={models}
           tokenInfo={tokenData}
           apiBasePath={config.apiBasePath}
         />
       </Content>
-      <div style={{ width: '100%', textAlign: 'center', margin: '48px 0 24px 0' }}>
+      <div style={{ width: '100%', textAlign: 'center', margin: '1rem 0 1rem 0' }}>
         <Button
           icon={<LogoutOutlined />}
           onClick={() => navigate('/logout')}
-          style={{ marginTop: 16 }}
+          style={{ marginTop: 0 }}
         >
           Logout
         </Button>
