@@ -1,19 +1,21 @@
-import exifread
+import logging
+
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 from typing import Optional, Tuple
 from datetime import datetime
 from imageinf.inference.models import ImageMetadata
 
+logger = logging.getLogger(__name__)
+
 
 def extract_image_metadata(image_path: str) -> Optional[ImageMetadata]:
-    """
-    Extract metadata from image EXIF data using exifread library.
-    More robust than PIL's built-in EXIF parser.
-    """
+    """Extract metadata from image EXIF data using PIL."""
     try:
-        with open(image_path, "rb") as f:
-            tags = exifread.process_file(f, details=False)
+        img = Image.open(image_path)
+        exif = img._getexif()
 
-        if not tags:
+        if not exif:
             return None
 
         metadata = {
@@ -25,92 +27,64 @@ def extract_image_metadata(image_path: str) -> Optional[ImageMetadata]:
             "camera_model": None,
         }
 
+        # Map EXIF tag IDs to names
+        exif_data = {TAGS.get(k, k): v for k, v in exif.items()}
+
         # Date taken
-        if "EXIF DateTimeOriginal" in tags:
+        if "DateTimeOriginal" in exif_data:
             try:
-                date_str = str(tags["EXIF DateTimeOriginal"])
                 metadata["date_taken"] = datetime.strptime(
-                    date_str, "%Y:%m:%d %H:%M:%S"
+                    exif_data["DateTimeOriginal"], "%Y:%m:%d %H:%M:%S"
                 )
-            except (ValueError, TypeError) as e:
-                print(f"Could not parse date: {e}")
+            except (ValueError, TypeError):
+                pass
 
         # Camera info
-        if "Image Make" in tags:
-            metadata["camera_make"] = str(tags["Image Make"])
-        if "Image Model" in tags:
-            metadata["camera_model"] = str(tags["Image Model"])
+        metadata["camera_make"] = exif_data.get("Make")
+        metadata["camera_model"] = exif_data.get("Model")
 
-        # GPS coordinates - exifread provides helper for this!
-        lat, lon = _extract_gps_from_exifread(tags)
-        if lat is not None and lon is not None:
+        # GPS
+        if "GPSInfo" in exif_data:
+            gps_info = {GPSTAGS.get(k, k): v for k, v in exif_data["GPSInfo"].items()}
+            lat, lon = _extract_gps_from_pil(gps_info)
             metadata["latitude"] = lat
             metadata["longitude"] = lon
 
-        # Altitude
-        if "GPS GPSAltitude" in tags:
-            try:
-                alt_rational = tags["GPS GPSAltitude"].values[0]
-                metadata["altitude"] = float(alt_rational.num) / float(alt_rational.den)
-            except (AttributeError, ZeroDivisionError, IndexError):
-                pass
-        print(metadata)
+            # Altitude
+            if "GPSAltitude" in gps_info:
+                try:
+                    metadata["altitude"] = float(gps_info["GPSAltitude"])
+                except (TypeError, ValueError):
+                    pass
+
         return ImageMetadata(**metadata)
 
     except Exception as e:
-        print(f"Warning: Could not extract metadata: {e}")
+        logger.warning(f"Warning: Could not extract metadata: {e}")
         return None
 
 
-def _extract_gps_from_exifread(tags: dict) -> Tuple[Optional[float], Optional[float]]:
-    """
-    Extract and convert GPS coordinates from exifread tags.
-    exifread handles the rational number conversion for us.
-    """
+def _extract_gps_from_pil(gps_info: dict) -> Tuple[Optional[float], Optional[float]]:
+    """Extract GPS coordinates from PIL GPSInfo dict."""
     try:
-        # Check if GPS data exists
-        if "GPS GPSLatitude" not in tags or "GPS GPSLongitude" not in tags:
+        if "GPSLatitude" not in gps_info or "GPSLongitude" not in gps_info:
             return None, None
 
-        lat_ref = str(tags.get("GPS GPSLatitudeRef", "N"))
-        lon_ref = str(tags.get("GPS GPSLongitudeRef", "E"))
+        def dms_to_decimal(dms, ref):
+            degrees, minutes, seconds = dms
+            decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
+            if ref in ["S", "W"]:
+                decimal = -decimal
+            return decimal
 
-        # exifread provides GPS values as list of IfdTag objects with .values attribute
-        lat_values = tags["GPS GPSLatitude"].values
-        lon_values = tags["GPS GPSLongitude"].values
-
-        # Convert to decimal
-        def dms_to_decimal(dms_values, ref):
-            """Convert DMS to decimal, handling exifread's rational format"""
-            try:
-                # Each value is a Ratio object with num/den
-                degrees = float(dms_values[0].num) / float(dms_values[0].den)
-                minutes = float(dms_values[1].num) / float(dms_values[1].den)
-                seconds = float(dms_values[2].num) / float(dms_values[2].den)
-
-                # Check for NaN or invalid values
-                if any(x != x for x in [degrees, minutes, seconds]):  # NaN check
-                    print(f"Warning: NaN values in GPS data: {dms_values}")
-                    return None
-
-                decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-                if ref in ["S", "W"]:
-                    decimal = -decimal
-
-                return decimal
-            except (ZeroDivisionError, AttributeError, IndexError) as e:
-                print(f"Error converting GPS: {e}, values: {dms_values}")
-                return None
-
-        latitude = dms_to_decimal(lat_values, lat_ref)
-        longitude = dms_to_decimal(lon_values, lon_ref)
-
-        if latitude is None or longitude is None:
-            return None, None
-
-        return latitude, longitude
+        lat = dms_to_decimal(
+            gps_info["GPSLatitude"], gps_info.get("GPSLatitudeRef", "N")
+        )
+        lon = dms_to_decimal(
+            gps_info["GPSLongitude"], gps_info.get("GPSLongitudeRef", "E")
+        )
+        return lat, lon
 
     except Exception as e:
-        print(f"Error extracting GPS: {e}")
+        logger.error(f"Error extracting GPS: {e}")
         return None, None

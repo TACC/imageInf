@@ -33,30 +33,30 @@ def mock_tapis_auth(monkeypatch):
 
 
 @pytest.fixture
-def mock_tapis_files(monkeypatch, mock_photo_file_without_location):
-    mock_client = MagicMock()
-    mock_files = MagicMock()
-    mock_files.getContents.side_effect = (
-        lambda systemId, path: mock_photo_file_without_location
-    )
-    mock_client.files = mock_files
+def mock_tapis_files_factory(monkeypatch):
+    """Factory fixture that accepts the photo file to use."""
 
-    monkeypatch.setattr(
-        "imageinf.inference.processor.Tapis", lambda *a, **kw: mock_client
-    )
-    return mock_client
+    def _create_mock(photo_file):
+        mock_client = MagicMock()
+        mock_files = MagicMock()
+        mock_files.getContents.side_effect = lambda systemId, path: photo_file
+        mock_client.files = mock_files
+
+        monkeypatch.setattr(
+            "imageinf.inference.processor.Tapis", lambda *a, **kw: mock_client
+        )
+        return mock_client
+
+    return _create_mock
 
 
 @pytest.fixture
-def mock_tapis_files_with_location(monkeypatch, mock_photo_file_with_location):
-    mock_client = MagicMock()
-    mock_files = MagicMock()
-    mock_files.getContents.side_effect = (
-        lambda systemId, path: mock_photo_file_with_location
-    )
-    mock_client.files = mock_files
+def mock_tapis_files(mock_tapis_files_factory, mock_photo_file_without_location):
+    return mock_tapis_files_factory(mock_photo_file_without_location)
 
-    monkeypatch.setattr(
-        "imageinf.inference.processor.Tapis", lambda *a, **kw: mock_client
-    )
-    return mock_client
+
+@pytest.fixture
+def mock_tapis_files_with_location(
+    mock_tapis_files_factory, mock_photo_file_with_location
+):
+    return mock_tapis_files_factory(mock_photo_file_with_location)
