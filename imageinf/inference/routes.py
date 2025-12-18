@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from .models import InferenceRequest, InferenceResponse
-from .processor import run_model_on_tapis_images, MODEL_METADATA
+from .processor import run_model_on_tapis_images
+from .registry import MODEL_METADATA
 from ..utils.auth import get_tapis_user, TapisUser
 
 

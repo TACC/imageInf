@@ -4,6 +4,7 @@ import pytest
 @pytest.fixture
 def mock_vit(monkeypatch):
     from imageinf.inference import processor
+    from imageinf.inference.models import Prediction
 
     class FakeViT:
         def __init__(self, model_name=None):
@@ -11,11 +12,10 @@ def mock_vit(monkeypatch):
 
         def classify_image(self, image):
             return [
-                {"label": "mock-label", "score": 0.99},
-                {"label": "another-label", "score": 0.01},
+                Prediction(label="mock-label", score=0.99),
+                Prediction(label="another-label", score=0.01),
             ]
 
-    # Mock the model registry to return our fake class
     monkeypatch.setattr(
         processor, "MODEL_REGISTRY", {"google/vit-base-patch16-224": FakeViT}
     )
@@ -76,6 +76,41 @@ def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
     assert result["path"] == "/path/to/test-image.jpg"
     assert isinstance(result["predictions"], list)
     assert result["predictions"][0]["label"] == "mock-label"
+
+    # Verify metadata is present (without asserting specific values)
+    assert "metadata" in result
+    assert "date_taken" in result["metadata"]
+    assert "latitude" in result["metadata"]
+    assert "longitude" in result["metadata"]
+    assert "camera_make" in result["metadata"]
+
+    assert result["metadata"]["longitude"] is None
+    assert result["metadata"]["latitude"] is None
+
+
+def test_sync_inference_one_image_with_location(
+    make_authed_client, mock_tapis_files_with_location, mock_vit
+):
+    client = make_authed_client()
+
+    payload = {
+        "inferenceType": "classification",
+        "files": [
+            {
+                "systemId": "designsafe.storage.default",
+                "path": "/path/to/test-image-with-location.jpg",
+            }
+        ],
+        "model": "google/vit-base-patch16-224",
+    }
+    response = client.post("/inference/sync", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+
+    result = data["results"][0]
+    assert result["metadata"]["longitude"] is not None
+    assert result["metadata"]["latitude"] is not None
 
 
 def test_sync_inference_unauthed(client_unauthed, mock_tapis_files, mock_vit):
