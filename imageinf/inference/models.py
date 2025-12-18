@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 
 class TapisFile(BaseModel):
@@ -12,15 +13,29 @@ class Prediction(BaseModel):
     score: float
 
 
+class ImageMetadata(BaseModel):
+    """Metadata extracted from image EXIF data"""
+
+    date_taken: Optional[datetime] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    altitude: Optional[float] = None
+    camera_make: Optional[str] = None
+    camera_model: Optional[str] = None
+
+
 class InferenceResult(BaseModel):
     systemId: str
     path: str
     predictions: List[Prediction]
+    metadata: Optional[ImageMetadata] = None
 
 
 class InferenceResponse(BaseModel):
     model: str
+    aggregated_results: List[InferenceResult]
     results: List[InferenceResult]
+    metadata: Optional[ImageMetadata] = None
 
 
 class InferenceRequest(BaseModel):
