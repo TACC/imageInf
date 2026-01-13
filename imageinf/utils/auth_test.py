@@ -43,7 +43,7 @@ def test_token_missing_iss_returns_401(client_unauthed):
 def test_token_with_invalid_tenant_returns_401(client_unauthed):
     bad_token = jwt.encode(
         {
-            "iss": "https://unauthorized.tapis.io",
+            "iss": "https://unauthorized.io",
             "sub": "testuser",
             "tapis/username": "testuser",
             "exp": time.time() + 300,
