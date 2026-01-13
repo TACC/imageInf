@@ -4,7 +4,7 @@
 
 ## Related
 
-* [WIN-XYZ](https://tacc-main.atlassian.net/browse/WIN-XYZ)
+* [WG-XYZ](https://tacc-main.atlassian.net/browse/WG-XYZ)
 
 ## Changes
 

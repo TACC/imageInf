@@ -9,12 +9,6 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-# TODO consider trusting *.tapis.io
-ALLOWED_TAPIS_TENANTS: list = [
-    "https://designsafe.tapis.io",
-    "https://portals.tapis.io",
-]
-
 
 class TapisUser(BaseModel):
     username: str
@@ -45,6 +39,16 @@ def _extract_tenant_from_token(token: str) -> Optional[str]:
         raise HTTPException(status_code=401, detail="Invalid token: failed to decode")
 
 
+def _is_valid_tapis_tenant(tenant_host: str) -> bool:
+    """Check if the tenant host is a valid *.tapis.io domain."""
+    try:
+        parsed = urlparse(tenant_host)
+        host = parsed.netloc.lower()
+        return host.endswith(".tapis.io") and parsed.scheme == "https"
+    except Exception:
+        return False
+
+
 def _validate_tapis_token(token: str) -> Dict[str, Any]:
     """
     Validate a Tapis token and extract user data.
@@ -68,7 +72,7 @@ def _validate_tapis_token(token: str) -> Dict[str, Any]:
         parsed_url = urlparse(issuer)
         tenant_host = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
-        if tenant_host not in ALLOWED_TAPIS_TENANTS:
+        if not _is_valid_tapis_tenant(tenant_host):
             logger.error(f"Unauthorized Tapis tenant: {tenant_host}")
             raise HTTPException(status_code=401, detail="Unauthorized Tapis tenant")
 
