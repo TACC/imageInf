@@ -38,8 +38,7 @@ const fetchTokenFromPortal = async (): Promise<string | null> => {
   try {
     // Since we're on the same domain (via an iframe), use relative path
     // The cookie will be sent automatically with credentials: 'include'
-    // TODO determine host CEP not have it hardcoded
-    const response = await fetch('https://dev.cep.tacc.utexas.edu/api/auth/tapis/', {
+    const response = await fetch('/api/auth/tapis/', {
       credentials: 'include',
     });
 
