@@ -48,6 +48,7 @@ def _is_valid_tapis_tenant(tenant_host: str) -> bool:
     except Exception:
         return False
 
+
 def _validate_tapis_token(token: str) -> Dict[str, Any]:
     """
     Validate a Tapis token and extract user data.
