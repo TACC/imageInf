@@ -45,10 +45,15 @@ server {
     location /imageinf/ {
         proxy_pass http://host.docker.internal:8080/imageinf/;
         proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Cookie $http_cookie;
+
+        proxy_hide_header Content-Security-Policy;
+        add_header Content-Security-Policy "connect-src 'self' ws: wss: https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.tacc.utexas.edu https://*.tapis.io;" always;
+
 
         # WebSocket support
         proxy_http_version 1.1;
