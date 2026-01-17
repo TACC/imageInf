@@ -18,7 +18,7 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
     data: fileContent,
     isLoading: fileLoading,
     isError: fileError,
-  } = useFileContent(tokenData?.token ?? '', file);
+  } = useFileContent(tokenData, file);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImgUrl, setModalImgUrl] = useState<string | null>(null);
 

@@ -3,7 +3,7 @@ import { Row, Col, Select, Divider, Input } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import TapisFileView from './TapisFileView';
 import { useInference } from '../hooks/useInference';
-import type { TokenInfo } from '../hooks/useToken';
+import type { TokenInfo } from '../types/token';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
 import { getCuratedFileList } from '../utils/examples';
 

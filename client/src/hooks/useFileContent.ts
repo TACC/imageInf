@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { TapisFile } from '../types/inference';
+import type { TokenInfo } from '../types/token';
 
 interface FileContentResponse {
   data: Blob;
@@ -7,14 +8,14 @@ interface FileContentResponse {
 }
 
 const fetchFileContent = async (
-  tapisToken: string,
+  tokenData: TokenInfo,
   file: TapisFile
 ): Promise<FileContentResponse> => {
   const response = await fetch(
-    `https://designsafe.tapis.io/v3/files/content/${file.systemId}${file.path}`,
+    `${tokenData.tapisHost}/v3/files/content/${file.systemId}${file.path}`,
     {
       headers: {
-        'X-Tapis-Token': tapisToken,
+        'X-Tapis-Token': tokenData.token,
       },
     }
   );
@@ -30,12 +31,17 @@ const fetchFileContent = async (
   };
 };
 
-export const useFileContent = (tapisToken: string, file: TapisFile | null) => {
+export const useFileContent = (tokenData: TokenInfo | undefined, file: TapisFile | null) => {
   return useQuery({
     queryKey: ['fileContent', file?.systemId, file?.path],
-    queryFn: () => fetchFileContent(tapisToken, file!),
-    enabled: !!tapisToken && !!file,
+    queryFn: () => {
+      if (!tokenData || !file) {
+        throw new Error('Missing required data');
+      }
+      return fetchFileContent(tokenData, file);
+    },
+    enabled: !!tokenData?.token && !!file,
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };

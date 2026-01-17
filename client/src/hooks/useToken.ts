@@ -1,12 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useConfig } from './useConfig';
 import { jwtDecode } from 'jwt-decode';
-
-export interface TokenInfo {
-  token: string;
-  tapisHost: string;
-  isValid: boolean;
-}
+import type { TokenInfo } from '../types/token';
 
 interface TapisJwtPayload {
   tenant_id: string;
