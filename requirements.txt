@@ -10,4 +10,5 @@ huggingface_hub[hf_xet]
 pytest
 pytest-cov
 black
+black[jupyter]
 flake8
