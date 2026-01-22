@@ -1,12 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useConfig } from './useConfig';
 import { jwtDecode } from 'jwt-decode';
-
-export interface TokenInfo {
-  token: string;
-  tapisHost: string;
-  isValid: boolean;
-}
+import type { TokenInfo } from '../types/token';
+import { isInIframe } from '../utils/iframe.ts';
 
 interface TapisJwtPayload {
   tenant_id: string;
@@ -24,10 +20,6 @@ const getHostFromIss = (iss: string): string => {
   } catch {
     throw new Error('Invalid ISS URL in token');
   }
-};
-
-const isInIframe = (): boolean => {
-  return window.self !== window.top;
 };
 
 const fetchTokenFromPortal = async (): Promise<string | null> => {

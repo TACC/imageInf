@@ -4,6 +4,7 @@ Setup JWT token for iframe testing by authenticating with Tapis.
 Writes the token to .env.iframe file.
 
 """
+
 import getpass
 from pathlib import Path
 

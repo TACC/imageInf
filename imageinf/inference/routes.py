@@ -4,7 +4,6 @@ from .processor import run_model_on_tapis_images
 from .registry import MODEL_METADATA
 from ..utils.auth import get_tapis_user, TapisUser
 
-
 router = APIRouter(
     prefix="/inference", tags=["inference"], dependencies=[Depends(get_tapis_user)]
 )  # validates Tapis JWT

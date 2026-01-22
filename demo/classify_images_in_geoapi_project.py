@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import uuid
 from fontawesome import icons
 
-
 # Constants
 HAZMAPPER_BACKEND = "https://hazmapper.tacc.utexas.edu/geoapi-staging"
 PROJECT_ID = 204

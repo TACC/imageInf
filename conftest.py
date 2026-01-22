@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 from imageinf.main import app
 import pytest
 
-
 pytest_plugins = [
     "imageinf.fixtures.files",
     "imageinf.fixtures.tapis",

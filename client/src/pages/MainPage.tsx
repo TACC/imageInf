@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useToken } from '../hooks/useToken';
 import { useConfig } from '../hooks/useConfig';
 import { useInferenceModel } from '../hooks/useInferenceModel';
+import { isInIframe } from '../utils/iframe.ts';
 import { Button, Typography, Row, Col, Layout, List, Modal } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import InferenceInterface from '../components/InferenceInterface';
@@ -27,6 +28,8 @@ export const MainPage = () => {
       navigate('/login');
     }
   }, [isError, tokenData, tokenLoading, navigate]);
+
+  const notInIframe = !isInIframe();
 
   if (modelsError) {
     return (
@@ -108,15 +111,17 @@ export const MainPage = () => {
           apiBasePath={config.apiBasePath}
         />
       </Content>
-      <div style={{ width: '100%', textAlign: 'center', margin: '1rem 0 1rem 0' }}>
-        <Button
-          icon={<LogoutOutlined />}
-          onClick={() => navigate('/logout')}
-          style={{ marginTop: 0 }}
-        >
-          Logout
-        </Button>
-      </div>
+      {notInIframe && (
+        <div style={{ width: '100%', textAlign: 'center', margin: '1rem 0 1rem 0' }}>
+          <Button
+            icon={<LogoutOutlined />}
+            onClick={() => navigate('/logout')}
+            style={{ marginTop: 0 }}
+          >
+            Logout
+          </Button>
+        </div>
+      )}
       <Modal
         title="Current Limitations & Notes"
         open={isModalVisible}

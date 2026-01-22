@@ -3,7 +3,6 @@ from tapipy.errors import BaseTapyException
 import jwt
 import time
 
-
 BASE_PAYLOAD = {
     "files": [
         {
