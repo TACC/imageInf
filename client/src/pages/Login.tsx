@@ -1,10 +1,16 @@
 import { Button } from 'antd';
+import { useSearchParams } from 'react-router-dom';
 import { useConfig } from '../hooks/useConfig';
 
 const Login = () => {
   const config = useConfig();
+  const [searchParams] = useSearchParams();
 
   const handleLogin = () => {
+    // Store where to return after successful auth
+    const returnTo = searchParams.get('returnTo') || '/';
+    sessionStorage.setItem('oauth_return_to', returnTo);
+
     // Generate a random state parameter for security
     // a store state in sessionStorage for verification
     const state = Math.random().toString(36).substring(7);
@@ -29,7 +35,6 @@ const Login = () => {
 
   return (
     <div>
-      <h3>Image Inferencing Service Login</h3>
       <div
         style={{
           display: 'flex',
