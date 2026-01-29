@@ -2,6 +2,8 @@ export const ImageInfEnvironment = {
   Local: 'local',
   Prod: 'prod',
   Pprd: 'pprd',
+  ProdTmp: 'prodTmp',
+  PprdTmp: 'pprdTmp',
   Unknown: 'unknown',
 };
 
@@ -18,17 +20,27 @@ const LocalConfig: Config = {
 };
 
 const ProdConfig: Config = {
-  clientId: 'imageinf.prod',
+  clientId: 'imageinf.prod.ui',
   host: 'https://prod.imageinf-service.tacc.utexas.edu',
 };
 
 const PprdConfig: Config = {
-  clientId: 'imageinf.pprd',
+  clientId: 'imageinf.pprd.ui',
   host: 'https://pprd.imageinf-service.tacc.utexas.edu',
 };
 
+const ProdTmpConfig: Config = {
+  clientId: 'imageinf.prod.ui',
+  host: 'https://prod.imageinf-service-tmp.tacc.utexas.edu',
+};
+
+const PprdTmpConfig: Config = {
+  clientId: 'imageinf.tmp.pprd.ui',
+  host: 'https://pprd.imageinf-service-tmp.tacc.utexas.edu',
+};
+
 const UnknownConfig: Config = {
-  clientId: 'imageinf.pprd',
+  clientId: 'imageinf.tmp.pprd.ui',
   host: 'https://pprd.imageinf-service.tacc.utexas.edu',
 };
 
@@ -36,6 +48,8 @@ const configs = {
   [ImageInfEnvironment.Local]: LocalConfig,
   [ImageInfEnvironment.Prod]: ProdConfig,
   [ImageInfEnvironment.Pprd]: PprdConfig,
+  [ImageInfEnvironment.ProdTmp]: ProdTmpConfig,
+  [ImageInfEnvironment.PprdTmp]: PprdTmpConfig,
   [ImageInfEnvironment.Unknown]: UnknownConfig,
 };
 
