@@ -1,16 +1,19 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useToken } from '../hooks/useToken';
-import { useConfig } from '../hooks/useConfig';
-import { useInferenceModel } from '../hooks/useInferenceModel';
+import { useToken } from '../hooks/useToken.ts';
+import { useConfig } from '../hooks/useConfig.ts';
+import { useInferenceModel } from '../hooks/useInferenceModel.ts';
 import { isInIframe } from '../utils/iframe.ts';
 import { Button, Typography, Row, Col, Layout, List, Modal } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
-import DemoInterface from '../components/DemoInterface.tsx';
+import InferenceInterface from '../components/InferenceInterface.tsx';
 
 const { Title, Paragraph } = Typography;
 const { Header, Content } = Layout;
 
+/**
+ * Developer Demo - Explore the raw API responses and test individual image inference.
+ */
 export const DemoPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,8 +31,7 @@ export const DemoPage = () => {
 
   useEffect(() => {
     if (!inIFrame && !tokenLoading && !tokenData?.isValid) {
-      const currentPath = location.pathname + location.search;
-      navigate(`/login?returnTo=${encodeURIComponent(currentPath)}`);
+      navigate(`/`, { replace: true });
     }
   }, [inIFrame, tokenData, tokenLoading, navigate, location.pathname, location.search]);
 
@@ -113,7 +115,7 @@ export const DemoPage = () => {
                 textAlign: 'center',
               }}
             >
-              imageInf - DEMO (TODO)
+              imageInf - DEMO
             </Title>
             <Paragraph
               style={{
@@ -139,15 +141,18 @@ export const DemoPage = () => {
         </Row>
       </Header>
       <Content style={{ maxWidth: '100%', margin: '0 auto', padding: '3rem 1rem 0 1rem' }}>
-        <DemoInterface models={models} tokenInfo={tokenData} apiBasePath={config.apiBasePath} />
+        <InferenceInterface
+          models={models}
+          tokenInfo={tokenData}
+          apiBasePath={config.apiBasePath}
+        />
       </Content>
       {!inIFrame && (
         <div style={{ width: '100%', textAlign: 'center', margin: '1rem 0 1rem 0' }}>
           <Button
             icon={<LogoutOutlined />}
             onClick={() => {
-              const currentPath = location.pathname + location.search;
-              navigate(`/logout?returnTo=${encodeURIComponent(currentPath)}`);
+              navigate(`/logout`);
             }}
             style={{ marginTop: 0 }}
           >
@@ -164,7 +169,12 @@ export const DemoPage = () => {
         bodyStyle={{ background: '#fafafa' }}
       >
         <List
-          dataSource={['TODO', 'TODO']}
+          dataSource={[
+            'Hardcoded to a single tapis tenant (designsafe.tapis.io)',
+            'Uses a limited/curated set of images for demo',
+            'Service is locked to a single image inferencing model huggingface.co/google/vit-base-patch16-224',
+            'Service is currently limited to synchronous behavior (i.e. no database or celery workers yet)',
+          ]}
           renderItem={(item: string) => (
             <List.Item
               style={{ borderBottom: 'none', padding: '4px 0 4px 20px', position: 'relative' }}

@@ -43,6 +43,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
 
   const [selectedSet, setSelectedSet] = useState<string | undefined>(undefined);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
+  const [selectedSensitivity, setSelectedSensitivity] = useState<'high' | 'medium' | 'low'>(
+    'medium'
+  );
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
@@ -60,13 +63,20 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     }
   }, [clipModels, selectedModel]);
 
-  // Auto-submit when model AND set are both selected
+// Submit inference when:
+// - User first selects both a model and image set
+// - User changes model, set, or sensitivity after initial selection
   useEffect(() => {
     if (selectedModel && selectedSet && currentFiles.length > 0) {
-      inferenceMutation.mutate({ files: currentFiles, model: selectedModel });
+      inferenceMutation.mutate({
+        files: currentFiles,
+        model: selectedModel,
+        sensitivity: selectedSensitivity,
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel, selectedSet]);
+  // excluding inferenceMutation from deps to avoid infinite loop
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModel, selectedSet, selectedSensitivity, currentFiles]);
 
   // Clear results when switching set or model
   useEffect(() => {
@@ -140,6 +150,23 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
                 value: m.name,
               }))}
               placeholder="Select a model"
+            />
+          </Col>
+        </Row>
+        <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
+          <Col span={4} style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>Sensitivity</div>
+          </Col>
+          <Col span={20}>
+            <Select
+              value={selectedSensitivity}
+              style={{ width: '100%' }}
+              onChange={(val) => setSelectedSensitivity(val)}
+              options={[
+                { label: 'High', value: 'high' } /*  - More labels, may include noise */,
+                { label: 'Medium', value: 'medium' } /* default */,
+                { label: 'Low', value: 'low' } /* fewer labels, higher confidence? */,
+              ]}
             />
           </Col>
         </Row>

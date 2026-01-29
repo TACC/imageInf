@@ -1,22 +1,15 @@
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Spin } from 'antd';
 
 const Logout = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Clear all session storage
     sessionStorage.clear();
-
-    // Check if we know where we want to go to (via returnTo)
-    const returnTo = searchParams.get('returnTo');
-    const loginPath = returnTo ? `/login?returnTo=${encodeURIComponent(returnTo)}` : '/login';
-
-    // Redirect to login
-    navigate(loginPath);
-  }, [navigate, searchParams]);
+    // go to landing page
+    navigate('/', { replace: true });
+  }, [navigate]);
 
   return (
     <div

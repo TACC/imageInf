@@ -36,6 +36,12 @@ class BaseCLIPModel:
         "sky",
     ]
 
+    SENSITIVITY_PRESETS = {
+        "high": {"threshold": 0.45, "temperature": 15.0},
+        "medium": {"threshold": 0.55, "temperature": 20.0},
+        "low": {"threshold": 0.65, "temperature": 25.0},
+    }
+
     DEFAULT_THRESHOLD = 0.55
     BINARY_TEMPERATURE = 20.0
 
@@ -75,12 +81,14 @@ class BaseCLIPModel:
     def classify_image(
         self,
         image: Image.Image,
-        threshold: Optional[float] = None,
-        top_k: Optional[int] = None,
+        sensitivity: str = "medium",
         debug_when_empty: bool = True,
     ) -> List[Prediction]:
-        if threshold is None:
-            threshold = self.DEFAULT_THRESHOLD
+
+        # Get threshold and temperature from sensitivity preset
+        preset = self.SENSITIVITY_PRESETS.get(sensitivity, self.SENSITIVITY_PRESETS["medium"])
+        threshold = preset["threshold"]
+        temperature = preset["temperature"]
 
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -95,7 +103,7 @@ class BaseCLIPModel:
             img_feat = F.normalize(img_feat, dim=-1)
 
             sims2 = torch.einsum("bd,lcd->blc", img_feat, self.text_pairs)
-            logits2 = sims2 * self.BINARY_TEMPERATURE
+            logits2 = sims2 * temperature
             probs2 = torch.softmax(logits2, dim=-1)[0]
             presence = probs2[:, 0]
 
@@ -107,8 +115,6 @@ class BaseCLIPModel:
         preds_all.sort(key=lambda p: p.score, reverse=True)
 
         preds = [p for p in preds_all if p.score >= threshold]
-        if top_k is not None:
-            preds = preds[:top_k]
 
         if not preds and debug_when_empty:
             top_dbg = preds_all[:5]
