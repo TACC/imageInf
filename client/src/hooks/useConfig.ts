@@ -33,6 +33,8 @@ const getEnv = (): ImageInfEnvironment => {
   if (hostname === 'localhost') return ImageInfEnvironment.Local;
   if (hostname === 'pprd.imageinf-service.tacc.utexas.edu') return ImageInfEnvironment.Pprd;
   if (hostname === 'prod.imageinf-service.tacc.utexas.edu') return ImageInfEnvironment.Prod;
+  if (hostname === 'pprd.imageinf-service-tmp.tacc.utexas.edu') return ImageInfEnvironment.PprdTmp;
+  if (hostname === 'prod.imageinf-service-tmp.tacc.utexas.edu') return ImageInfEnvironment.ProdTmp;
 
   return ImageInfEnvironment.Unknown;
 };
