@@ -3,7 +3,7 @@ import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty } from 'antd'
 import { LoadingOutlined, ExclamationCircleOutlined, PictureOutlined } from '@ant-design/icons';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
-import type { TapisFile, InferenceModelMeta } from '../types/inference';
+import type { TapisFile, InferenceModelMeta, Prediction, InferenceResult } from '../types/inference';
 import TapisImageViewer from './TapisImageViewer';
 import { getCuratedFileList } from '../utils/examples';
 
@@ -93,9 +93,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       const results = response.aggregated_results || response.results || [];
 
       if (Array.isArray(results)) {
-        results.forEach((fileResult: any) => {
+        results.forEach((fileResult: InferenceResult) => {
           const predictions = fileResult.predictions || [];
-          predictions.forEach((item: any) => {
+          predictions.forEach((item: Prediction) => {
             const label = item.label;
             if (typeof label === 'string') {
               labelCounts[label] = (labelCounts[label] || 0) + 1;
