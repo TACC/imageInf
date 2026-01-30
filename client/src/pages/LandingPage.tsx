@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Button, Typography, Card, Row, Col, Layout, Spin } from 'antd';
-import { CodeOutlined, PictureOutlined, LoginOutlined } from '@ant-design/icons';
+import { CodeOutlined, PictureOutlined } from '@ant-design/icons';
 import { useToken } from '../hooks/useToken';
 import { useConfig } from '../hooks/useConfig';
 
