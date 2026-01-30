@@ -9,8 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Use CPU-only PyTorch by default. For GPU support, build with:
+#   docker build --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu121 ...
+ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --extra-index-url ${TORCH_INDEX} -r requirements.txt
+
 
 WORKDIR /app
 
