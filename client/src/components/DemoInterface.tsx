@@ -3,7 +3,7 @@ import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty } from 'antd'
 import { LoadingOutlined, ExclamationCircleOutlined, PictureOutlined } from '@ant-design/icons';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
-import type { TapisFile, InferenceModelMeta, Prediction, InferenceResult } from '../types/inference';
+import type { TapisFile, InferenceModelMeta } from '../types/inference';
 import TapisImageViewer from './TapisImageViewer';
 import { getCuratedFileList } from '../utils/examples';
 
@@ -92,17 +92,11 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       const response = inferenceMutation.data;
       const results = response.aggregated_results || response.results || [];
 
-      if (Array.isArray(results)) {
-        results.forEach((fileResult: InferenceResult) => {
-          const predictions = fileResult.predictions || [];
-          predictions.forEach((item: Prediction) => {
-            const label = item.label;
-            if (typeof label === 'string') {
-              labelCounts[label] = (labelCounts[label] || 0) + 1;
-            }
-          });
+      results.forEach((fileResult) => {
+        fileResult.predictions?.forEach((prediction) => {
+          labelCounts[prediction.label] = (labelCounts[prediction.label] || 0) + 1;
         });
-      }
+      });
 
       const aggregated = Object.entries(labelCounts)
         .map(([label, count]) => ({ label, count }))
