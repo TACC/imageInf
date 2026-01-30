@@ -86,7 +86,9 @@ class BaseCLIPModel:
     ) -> List[Prediction]:
 
         # Get threshold and temperature from sensitivity preset
-        preset = self.SENSITIVITY_PRESETS.get(sensitivity, self.SENSITIVITY_PRESETS["medium"])
+        preset = self.SENSITIVITY_PRESETS.get(
+            sensitivity, self.SENSITIVITY_PRESETS["medium"]
+        )
         threshold = preset["threshold"]
         temperature = preset["temperature"]
 

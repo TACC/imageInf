@@ -19,8 +19,8 @@ def run_model_on_tapis_images(
     files: List[TapisFile],
     user: TapisUser,
     model_name: str = DEFAULT_MODEL_NAME,
-    labels: Optional[List[str]] = None, # only for CLIP
-    sensitivity: str = "medium", # only for CLIP
+    labels: Optional[List[str]] = None,  # only for CLIP
+    sensitivity: str = "medium",  # only for CLIP
 ) -> InferenceResponse:
     if model_name not in MODEL_REGISTRY:
         raise ValueError(f"Model '{model_name}' is not supported.")
@@ -72,7 +72,6 @@ def run_model_on_tapis_images(
                         systemId=file.systemId, path=file.path, predictions=aggregated
                     )
                 )
-
 
         except Exception as e:
             raise RuntimeError(f"Failed to process {file.path}: {str(e)}")
