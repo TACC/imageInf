@@ -63,9 +63,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     }
   }, [clipModels, selectedModel]);
 
-// Submit inference when:
-// - User first selects both a model and image set
-// - User changes model, set, or sensitivity after initial selection
+  // Submit inference when:
+  // - User first selects both a model and image set
+  // - User changes model, set, or sensitivity after initial selection
   useEffect(() => {
     if (selectedModel && selectedSet && currentFiles.length > 0) {
       inferenceMutation.mutate({
@@ -74,8 +74,8 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
         sensitivity: selectedSensitivity,
       });
     }
-  // excluding inferenceMutation from deps to avoid infinite loop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // excluding inferenceMutation from deps to avoid infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel, selectedSet, selectedSensitivity, currentFiles]);
 
   // Clear results when switching set or model
