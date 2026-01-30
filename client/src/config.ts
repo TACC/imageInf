@@ -30,7 +30,7 @@ const PprdConfig: Config = {
 };
 
 const ProdTmpConfig: Config = {
-  clientId: 'imageinf.prod.ui',
+  clientId: 'imageinf.tmp.prod.ui',
   host: 'https://prod.imageinf-service-tmp.tacc.utexas.edu',
 };
 
