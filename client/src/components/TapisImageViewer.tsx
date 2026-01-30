@@ -7,12 +7,12 @@ import type { TapisFile } from '../types/inference';
 
 const { Text } = Typography;
 
-interface TapisFileViewProps {
+interface TapisImageViewerProps {
   file: TapisFile | null;
   style?: React.CSSProperties;
 }
 
-export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => {
+export const TapisImageViewer: React.FC<TapisImageViewerProps> = ({ file, style }) => {
   const { data: tokenData } = useToken();
   const {
     data: fileContent,
@@ -36,14 +36,6 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
       return <ExclamationCircleOutlined style={{ color: '#ff4d4f', fontSize: 24 }} />;
     }
 
-    if (fileContent) {
-      console.log('File content received:', {
-        contentType: fileContent.contentType,
-        size: fileContent.data.size,
-        type: fileContent.data.type,
-      });
-    }
-
     if (fileContent && fileContent.contentType.startsWith('image/')) {
       const imageUrl = URL.createObjectURL(fileContent.data);
       return (
@@ -62,7 +54,7 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
       );
     }
 
-    // Fallback: check if blob type is image or if file extension suggests it's an image
+    // Check if blob type is image or if file extension suggests it's an image
     if (
       fileContent &&
       (fileContent.data.type.startsWith('image/') ||
@@ -128,4 +120,4 @@ export const TapisFileView: React.FC<TapisFileViewProps> = ({ file, style }) => 
   );
 };
 
-export default TapisFileView;
+export default TapisImageViewer;

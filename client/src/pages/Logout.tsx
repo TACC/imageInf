@@ -6,11 +6,9 @@ const Logout = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Clear all session storage
     sessionStorage.clear();
-
-    // Redirect to login
-    navigate('/login');
+    // go to landing page
+    navigate('/', { replace: true });
   }, [navigate]);
 
   return (

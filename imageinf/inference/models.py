@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 from datetime import datetime
 
 
@@ -35,10 +35,13 @@ class InferenceResponse(BaseModel):
     model: str
     aggregated_results: List[InferenceResult]
     results: List[InferenceResult]
-    metadata: Optional[ImageMetadata] = None
 
 
 class InferenceRequest(BaseModel):
     inferenceType: str = "classification"
     files: List[TapisFile]
-    model: str = "google/vit-base-patch16-224"
+    model: str = ("google/vit-base-patch16-224",)
+    labels: Optional[List[str]] = None  # used in CLIP only
+    sensitivity: Optional[Literal["high", "medium", "low"]] = (
+        "medium"  # used in CLIP only
+    )

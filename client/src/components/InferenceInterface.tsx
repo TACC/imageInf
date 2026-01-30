@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Select, Divider, Input } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import TapisFileView from './TapisFileView';
+import TapisImageViewer from './TapisImageViewer';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
@@ -137,7 +137,7 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
             width: 600,
           }}
         >
-          <TapisFileView file={selectedFile} />
+          <TapisImageViewer file={selectedFile} />
         </Col>
         <Col span={12}>
           <div

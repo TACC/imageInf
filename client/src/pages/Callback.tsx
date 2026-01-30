@@ -38,8 +38,9 @@ const Callback = () => {
         // Clear the state
         sessionStorage.removeItem('oauth_state');
 
-        // Redirect to home
-        navigate('/');
+        // Redirect to original page (or home)
+        const returnTo = sessionStorage.getItem('oauth_return_to') || '/';
+        navigate(returnTo, { replace: true });
       } catch (error) {
         console.error('Authentication error:', error);
         navigate('/login');

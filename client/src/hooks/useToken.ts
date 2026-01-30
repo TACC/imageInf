@@ -57,6 +57,11 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
     const now = Date.now() / 1000;
     if (decodedToken.exp < now) {
       console.warn('Token is expired');
+
+      // Clear any stale sessionStorage
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('expires_at');
+
       return {
         token: '',
         tapisHost: fallbackHost,
@@ -73,6 +78,10 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
 
     if (!response.ok) {
       console.warn('Token validation failed:', response.status);
+
+      // Clear any stale sessionStorage
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('expires_at');
       return {
         token: '',
         tapisHost: fallbackHost,

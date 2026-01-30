@@ -1,20 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { useToken } from '../hooks/useToken';
-import { useConfig } from '../hooks/useConfig';
-import { useInferenceModel } from '../hooks/useInferenceModel';
+import { useToken } from '../hooks/useToken.ts';
+import { useConfig } from '../hooks/useConfig.ts';
+import { useInferenceModel } from '../hooks/useInferenceModel.ts';
 import { isInIframe } from '../utils/iframe.ts';
 import { Button, Typography, Row, Col, Layout, List, Modal } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
-import InferenceInterface from '../components/InferenceInterface';
+import InferenceInterface from '../components/InferenceInterface.tsx';
 
 const { Title, Paragraph } = Typography;
 const { Header, Content } = Layout;
 
-export const MainPage = () => {
+/**
+ * Developer Demo - Explore the raw API responses and test individual image inference.
+ */
+export const DemoPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const config = useConfig();
-  const { data: tokenData, isError, isLoading: tokenLoading } = useToken();
+  const { data: tokenData, isError: tokenLoadingError, isLoading: tokenLoading } = useToken();
   const {
     data: models,
     isLoading: modelsLoading,
@@ -23,18 +27,50 @@ export const MainPage = () => {
   } = useInferenceModel(tokenData?.token ?? '', config.apiBasePath);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const inIFrame = isInIframe();
+
   useEffect(() => {
-    if (isError || (!tokenLoading && !tokenData?.isValid)) {
-      navigate('/login');
+    if (!inIFrame && !tokenLoading && !tokenData?.isValid) {
+      navigate(`/`, { replace: true });
     }
-  }, [isError, tokenData, tokenLoading, navigate]);
+  }, [inIFrame, tokenData, tokenLoading, navigate, location.pathname, location.search]);
 
-  const notInIframe = !isInIframe();
-
-  if (modelsError) {
+  if (modelsError || tokenLoadingError) {
     return (
-      <div style={{ color: '#ff4d4f', fontSize: 24, textAlign: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#242424',
+          width: '100vw',
+          color: '#ff4d4f',
+          fontSize: 24,
+          textAlign: 'center',
+        }}
+      >
         Failed to load models: {modelsErrorDetail?.message || 'Unkown Error'}
+      </div>
+    );
+  }
+
+  if (inIFrame && !tokenLoading && !tokenData?.isValid) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#242424',
+          width: '100vw',
+          color: '#ff4d4f',
+          fontSize: 24,
+          textAlign: 'center',
+        }}
+      >
+        Session Expired
       </div>
     );
   }
@@ -111,11 +147,13 @@ export const MainPage = () => {
           apiBasePath={config.apiBasePath}
         />
       </Content>
-      {notInIframe && (
+      {!inIFrame && (
         <div style={{ width: '100%', textAlign: 'center', margin: '1rem 0 1rem 0' }}>
           <Button
             icon={<LogoutOutlined />}
-            onClick={() => navigate('/logout')}
+            onClick={() => {
+              navigate(`/logout`);
+            }}
             style={{ marginTop: 0 }}
           >
             Logout
@@ -151,4 +189,4 @@ export const MainPage = () => {
   );
 };
 
-export default MainPage;
+export default DemoPage;
