@@ -100,9 +100,7 @@ class BaseCLIPModel:
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            vision_out = self.model.vision_model(
-                pixel_values=inputs["pixel_values"]
-            )
+            vision_out = self.model.vision_model(pixel_values=inputs["pixel_values"])
             img_feat = self.model.visual_projection(vision_out.pooler_output)
             img_feat = F.normalize(img_feat, dim=-1)
 
