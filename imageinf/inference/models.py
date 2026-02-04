@@ -40,7 +40,7 @@ class InferenceResponse(BaseModel):
 class InferenceRequest(BaseModel):
     inferenceType: str = "classification"
     files: List[TapisFile]
-    model: str = "google/vit-base-patch16-224"
+    model: str = ("google/vit-base-patch16-224",)
     labels: Optional[List[str]] = None  # used in CLIP only
     sensitivity: Optional[Literal["high", "medium", "low"]] = (
         "medium"  # used in CLIP only

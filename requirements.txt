@@ -4,8 +4,8 @@ uvicorn[standard]
 httpx
 tapipy
 Pillow
-torch
-transformers
+torch>=2.10,<3
+transformers>=4.57,<5
 huggingface_hub[hf_xet]
 pytest
 pytest-cov
