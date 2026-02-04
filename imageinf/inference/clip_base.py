@@ -72,9 +72,10 @@ class BaseCLIPModel:
         with torch.no_grad():
             ti = self.processor(text=all_texts, return_tensors="pt", padding=True)
             ti = {k: v.to(self.device) for k, v in ti.items()}
-            emb = self.model.get_text_features(
+            text_out = self.model.text_model(
                 input_ids=ti["input_ids"], attention_mask=ti["attention_mask"]
             )
+            emb = self.model.text_projection(text_out.pooler_output)
             emb = F.normalize(emb, dim=-1)
             self.text_pairs = emb.reshape(len(self.labels), 2, -1)
 
@@ -99,9 +100,8 @@ class BaseCLIPModel:
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
         with torch.no_grad():
-            img_feat = self.model.get_image_features(
-                pixel_values=inputs["pixel_values"]
-            )
+            vision_out = self.model.vision_model(pixel_values=inputs["pixel_values"])
+            img_feat = self.model.visual_projection(vision_out.pooler_output)
             img_feat = F.normalize(img_feat, dim=-1)
 
             sims2 = torch.einsum("bd,lcd->blc", img_feat, self.text_pairs)

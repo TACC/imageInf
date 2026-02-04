@@ -19,7 +19,10 @@ interface AggregatedResult {
 }
 
 const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBasePath }) => {
-  const curatedFileList = getCuratedFileList(tokenInfo.tapisHost);
+  const curatedFileList = useMemo(
+    () => getCuratedFileList(tokenInfo.tapisHost),
+    [tokenInfo.tapisHost]
+  );
 
   // only supporting clip models on first pass
   const clipModels = useMemo(

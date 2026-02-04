@@ -22,7 +22,7 @@ const getHostFromIss = (iss: string): string => {
   }
 };
 
-const fetchTokenFromPortal = async (): Promise<string | null> => {
+const fetchTokenFromPortalUsingCookie = async (): Promise<string | null> => {
   if (!isInIframe()) {
     return null;
   }
@@ -95,7 +95,7 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
       isValid: true,
     };
   } catch (error) {
-    console.error('Token validation error:', error);
+    console.error('Token missing or validation error:', error);
     return {
       token: '',
       tapisHost: fallbackHost,
@@ -106,30 +106,14 @@ const validateTokenAndGetHost = async (token: string, fallbackHost: string): Pro
 
 const getToken = async (fallbackHost: string): Promise<TokenInfo> => {
   // First, try to get token from parent portal (if in iframe)
-  const tokenFromCorePortal = await fetchTokenFromPortal();
+  const tokenFromCorePortal = await fetchTokenFromPortalUsingCookie();
 
   if (tokenFromCorePortal) {
     // Validate the portal token
-    const result = await validateTokenAndGetHost(tokenFromCorePortal, fallbackHost);
-    if (result.isValid) {
-      // Store in sessionStorage for subsequent requests
-      sessionStorage.setItem('access_token', tokenFromCorePortal);
-
-      // Extract expiry from JWT
-      try {
-        const decoded = jwtDecode<TapisJwtPayload>(tokenFromCorePortal);
-        sessionStorage.setItem('expires_at', (decoded.exp * 1000).toString());
-      } catch {
-        console.warn('Failed to decode JWT for expiry');
-        // Fallback to 1 hour
-        sessionStorage.setItem('expires_at', (Date.now() + 3600000).toString());
-      }
-
-      return result;
-    }
+    return validateTokenAndGetHost(tokenFromCorePortal, fallbackHost);
   }
 
-  // Fall back to sessionStorage (for direct access or cached token)
+  // Use sessionStorage (direct access, not in iframe scenario)
   const token = sessionStorage.getItem('access_token');
   const expiresAt = sessionStorage.getItem('expires_at');
 
@@ -144,6 +128,15 @@ const getToken = async (fallbackHost: string): Promise<TokenInfo> => {
   return validateTokenAndGetHost(token, fallbackHost);
 };
 
+/**
+ * Manages the user's Tapis auth token via React Query.
+ *
+ * staleTime (5 min) ensures the backend middleware gets regular
+ * opportunities to refresh tokens before expiry (backend has 10
+ * min threshold).
+ *
+ * Retry disabled since auth failures require login, not retries.
+ */
 export const useToken = () => {
   const config = useConfig();
 
@@ -151,6 +144,7 @@ export const useToken = () => {
     queryKey: ['token'],
     queryFn: () => getToken(config.host),
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000 /* 5min */,
   });
 };
