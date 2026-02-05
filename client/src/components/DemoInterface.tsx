@@ -5,10 +5,11 @@ import {
   ExclamationCircleOutlined,
   PictureOutlined,
   TagsOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
-import type { TapisFile, InferenceModelMeta } from '../types/inference';
+import type { TapisFile, InferenceModelMeta, InferenceResult } from '../types/inference';
 import TapisImageViewer from './TapisImageViewer';
 import { getCuratedFileList } from '../utils/examples';
 
@@ -29,7 +30,7 @@ interface LabelPreset {
   labels: string[];
 }
 
-// Duplicate of what is definedon backend
+// Duplicate of what is defined on backend
 const ALL_DEFAULT_LABELS = [
   'house',
   'building',
@@ -112,6 +113,8 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
   );
   const [selectedLabelPreset, setSelectedLabelPreset] = useState<string>('structures');
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
+  const [inferenceResults, setInferenceResults] = useState<InferenceResult[]>([]);
+  const [selectedFilterLabels, setSelectedFilterLabels] = useState<string[]>([]);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
 
@@ -126,6 +129,29 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     const preset = LABEL_PRESETS.find((p) => p.value === selectedLabelPreset);
     return preset?.labels || ALL_DEFAULT_LABELS;
   }, [selectedLabelPreset]);
+
+  // Build a map of file path -> labels detected
+  const fileLabelsMap = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
+    inferenceResults.forEach((result) => {
+      const labels = new Set<string>();
+      result.predictions?.forEach((p) => labels.add(p.label));
+      map[result.path] = labels;
+    });
+    return map;
+  }, [inferenceResults]);
+
+  // Filter files based on selected labels (show files that have ANY of the selected labels)
+  const filteredFiles = useMemo(() => {
+    if (selectedFilterLabels.length === 0) {
+      return currentFiles;
+    }
+    return currentFiles.filter((file) => {
+      const fileLabels = fileLabelsMap[file.path];
+      if (!fileLabels) return false;
+      return selectedFilterLabels.some((label) => fileLabels.has(label));
+    });
+  }, [currentFiles, selectedFilterLabels, fileLabelsMap]);
 
   // Auto-select first model when models are loaded (but NOT auto-select set)
   useEffect(() => {
@@ -150,9 +176,11 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModel, selectedSet, selectedSensitivity, selectedLabelPreset, currentFiles]);
 
-  // Clear results when switching set, model, or labels
+  // Clear results and selected filter labels when switching set, model, or labels
   useEffect(() => {
     setAggregatedResults([]);
+    setInferenceResults([]);
+    setSelectedFilterLabels([]);
   }, [selectedSet, selectedModel, selectedLabelPreset]);
 
   // Aggregate inference results
@@ -163,6 +191,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       // Access the nested array - use aggregated_results for CLIP
       const response = inferenceMutation.data;
       const results = response.aggregated_results || response.results || [];
+
+      // Store full results for filtering
+      setInferenceResults(results);
 
       results.forEach((fileResult) => {
         fileResult.predictions?.forEach((prediction) => {
@@ -178,9 +209,20 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     }
   }, [inferenceMutation.isSuccess, inferenceMutation.data]);
 
+  const toggleFilterLabel = (label: string) => {
+    setSelectedFilterLabels((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
+
+  const clearFilterLabels = () => {
+    setSelectedFilterLabels([]);
+  };
+
   const isReady = selectedModel && selectedSet;
   const isLoading = inferenceMutation.isPending;
   const isError = inferenceMutation.isError;
+  const isFiltered = selectedFilterLabels.length > 0;
 
   return (
     <>
@@ -312,14 +354,60 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               border: '1px solid #434343',
             }}
           >
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 500, marginBottom: 16 }}>
-              Gallery
-              {currentFiles.length > 0 && (
-                <span style={{ color: '#888', fontWeight: 400, marginLeft: 8 }}>
-                  ({currentFiles.length} images)
-                </span>
+            <div
+              style={{
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: 500,
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                Gallery
+                {currentFiles.length > 0 && (
+                  <span style={{ color: '#888', fontWeight: 400, marginLeft: 8 }}>
+                    {isFiltered ? (
+                      <>
+                        {filteredFiles.length} of {currentFiles.length} images
+                      </>
+                    ) : (
+                      `(${currentFiles.length} images)`
+                    )}
+                  </span>
+                )}
+              </div>
+              {isFiltered && (
+                <Tag
+                  color="blue"
+                  style={{ cursor: 'pointer' }}
+                  onClick={clearFilterLabels}
+                  icon={<CloseCircleOutlined />}
+                >
+                  Clear filter
+                </Tag>
               )}
             </div>
+
+            {/* Show selected filter labels */}
+            {isFiltered && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#888', marginRight: 8 }}>Filtering by:</span>
+                {selectedFilterLabels.map((label) => (
+                  <Tag
+                    key={label}
+                    color="blue"
+                    closable
+                    onClose={() => toggleFilterLabel(label)}
+                    style={{ marginBottom: 4 }}
+                  >
+                    {label}
+                  </Tag>
+                ))}
+              </div>
+            )}
 
             {!isReady ? (
               <Empty
@@ -345,9 +433,19 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
                 />
                 <span style={{ color: '#fff', marginLeft: 16 }}>Loading images...</span>
               </div>
+            ) : filteredFiles.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: '#888' }}>
+                    No images match the selected labels
+                  </span>
+                }
+                style={{ padding: '80px 0' }}
+              />
             ) : (
               <Row gutter={[16, 16]}>
-                {currentFiles.map((file) => (
+                {filteredFiles.map((file) => (
                   <Col xs={12} sm={8} md={8} key={file.path}>
                     <Card
                       hoverable
@@ -417,6 +515,12 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               )}
             </div>
 
+            {aggregatedResults.length > 0 && (
+              <div style={{ color: '#888', fontSize: 12, marginBottom: 12 }}>
+                Click labels to filter gallery
+              </div>
+            )}
+
             {!isReady ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -444,26 +548,49 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             ) : aggregatedResults.length > 0 ? (
               <List
                 dataSource={aggregatedResults}
-                renderItem={(item) => (
-                  <List.Item style={{ borderBottom: '1px solid #333', padding: '12px 0' }}>
-                    <div
+                renderItem={(item) => {
+                  const isSelected = selectedFilterLabels.includes(item.label);
+                  return (
+                    <List.Item
+                      onClick={() => toggleFilterLabel(item.label)}
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        alignItems: 'center',
+                        borderBottom: '1px solid #333',
+                        padding: '12px 8px',
+                        cursor: 'pointer',
+                        background: isSelected ? 'rgba(24, 144, 255, 0.15)' : 'transparent',
+                        borderRadius: 4,
+                        marginBottom: 2,
+                        transition: 'background 0.2s',
                       }}
                     >
-                      <span style={{ color: '#fff' }}>{item.label}</span>
-                      <Badge
-                        count={item.count}
-                        style={{ backgroundColor: '#1890ff' }}
-                        showZero
-                        overflowCount={99}
-                      />
-                    </div>
-                  </List.Item>
-                )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: isSelected ? '#1890ff' : '#fff',
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                        <Badge
+                          count={item.count}
+                          style={{
+                            backgroundColor: isSelected ? '#1890ff' : '#555',
+                          }}
+                          showZero
+                          overflowCount={99}
+                        />
+                      </div>
+                    </List.Item>
+                  );
+                }}
               />
             ) : (
               <div style={{ color: '#888', textAlign: 'center', padding: '80px 0' }}>
