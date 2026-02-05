@@ -11,6 +11,7 @@ import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
 import type { TapisFile, InferenceModelMeta, InferenceResult } from '../types/inference';
 import TapisImageViewer from './TapisImageViewer';
+import ImageBrowser from './ImageBrowser';
 import { getCuratedFileList } from '../utils/examples';
 
 interface DemoInterfaceProps {
@@ -112,6 +113,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
   const [inferenceResults, setInferenceResults] = useState<InferenceResult[]>([]);
   const [selectedFilterLabels, setSelectedFilterLabels] = useState<string[]>([]);
+  const [browseIndex, setBrowseIndex] = useState<number | null>(null);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
 
@@ -165,7 +167,6 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       inferenceMutation.mutate({
         files: currentFiles,
         model: selectedModel,
-        /* sensitivity: selectedSensitivity,*/
         labels: selectedLabelPreset === 'all' ? undefined : currentLabels,
       });
     }
@@ -178,6 +179,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     setAggregatedResults([]);
     setInferenceResults([]);
     setSelectedFilterLabels([]);
+    setBrowseIndex(null);
   }, [selectedSet, selectedModel, selectedLabelPreset]);
 
   // Aggregate inference results
@@ -210,10 +212,12 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     setSelectedFilterLabels((prev) =>
       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
     );
+    setBrowseIndex(null); // Reset browser when filter changes
   };
 
   const clearFilterLabels = () => {
     setSelectedFilterLabels([]);
+    setBrowseIndex(null);
   };
 
   const isReady = selectedModel && selectedSet;
@@ -425,10 +429,11 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               />
             ) : (
               <Row gutter={[16, 16]}>
-                {filteredFiles.map((file) => (
+                {filteredFiles.map((file, index) => (
                   <Col xs={12} sm={8} md={8} key={file.path}>
                     <Card
                       hoverable
+                      onClick={() => setBrowseIndex(index)}
                       cover={
                         <TapisImageViewer
                           file={file}
@@ -574,6 +579,14 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
           </div>
         </Col>
       </Row>
+
+      {/* Image Browser Modal */}
+      <ImageBrowser
+        files={filteredFiles}
+        currentIndex={browseIndex}
+        onIndexChange={setBrowseIndex}
+        inferenceResults={inferenceResults}
+      />
     </>
   );
 };

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Row, Col, Select, Divider, Input } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import TapisImageViewer from './TapisImageViewer';
+import ImageBrowser from './ImageBrowser';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
-import type { TapisFile, InferenceModelMeta } from '../types/inference';
+import type { TapisFile, InferenceModelMeta, InferenceResult } from '../types/inference';
 import { getCuratedFileList } from '../utils/examples';
 
 const { TextArea } = Input;
@@ -20,12 +21,23 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
   tokenInfo,
   apiBasePath,
 }) => {
-  const curatedFileList = getCuratedFileList(tokenInfo.tapisHost);
+  const curatedFileList = useMemo(
+    () => getCuratedFileList(tokenInfo.tapisHost),
+    [tokenInfo.tapisHost]
+  );
   const [selectedFile, setSelectedFile] = useState<TapisFile | null>(curatedFileList[0]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
   const [result, setResult] = useState('');
+  const [inferenceResults, setInferenceResults] = useState<InferenceResult[]>([]);
+  const [browseIndex, setBrowseIndex] = useState<number | null>(null);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
+
+  // Get current file index in curated list
+  const currentFileIndex = useMemo(() => {
+    if (!selectedFile) return -1;
+    return curatedFileList.findIndex((f) => f.path === selectedFile.path);
+  }, [selectedFile, curatedFileList]);
 
   // Auto-select first model when models are loaded
   useEffect(() => {
@@ -46,14 +58,18 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
   // Clear results when switching file or model
   useEffect(() => {
     setResult('');
+    setInferenceResults([]);
   }, [selectedFile, selectedModel]);
 
-  // Show inference results in the text area
+  // Show inference results in the text area and store for ImageBrowser
   useEffect(() => {
     if (inferenceMutation.isPending) {
       setResult('Making request...');
     } else if (inferenceMutation.isSuccess && inferenceMutation.data) {
       setResult(JSON.stringify(inferenceMutation.data, null, 2));
+      // Store results for ImageBrowser labels
+      const results = inferenceMutation.data.aggregated_results || inferenceMutation.data.results || [];
+      setInferenceResults(results);
     } else if (inferenceMutation.isError) {
       setResult('Error');
     }
@@ -64,6 +80,20 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
     inferenceMutation.error,
     inferenceMutation.isPending,
   ]);
+
+  // Sync ImageBrowser navigation back to selected file
+  const handleBrowseIndexChange = (index: number | null) => {
+    setBrowseIndex(index);
+    if (index !== null && curatedFileList[index]) {
+      setSelectedFile(curatedFileList[index]);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (currentFileIndex >= 0) {
+      setBrowseIndex(currentFileIndex);
+    }
+  };
 
   return (
     <>
@@ -135,9 +165,19 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
             justifyContent: 'center',
             borderRadius: 8,
             width: 600,
+            cursor: 'pointer',
           }}
+          onClick={handleImageClick}
         >
-          <TapisImageViewer file={selectedFile} />
+          <TapisImageViewer
+            file={selectedFile}
+            style={{
+              maxHeight: 380,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         </Col>
         <Col span={12}>
           <div
@@ -184,6 +224,14 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
           </div>
         </Col>
       </Row>
+
+      {/* Image Browser Modal */}
+      <ImageBrowser
+        files={curatedFileList}
+        currentIndex={browseIndex}
+        onIndexChange={handleBrowseIndexChange}
+        inferenceResults={inferenceResults}
+      />
     </>
   );
 };
