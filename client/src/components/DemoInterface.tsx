@@ -421,9 +421,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
-                  <span style={{ color: '#888' }}>
-                    No images match the selected labels
-                  </span>
+                  <span style={{ color: '#888' }}>No images match the selected labels</span>
                 }
                 style={{ padding: '80px 0' }}
               />

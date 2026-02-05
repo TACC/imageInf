@@ -68,7 +68,8 @@ const InferenceInterface: React.FC<InferenceInterfaceProps> = ({
     } else if (inferenceMutation.isSuccess && inferenceMutation.data) {
       setResult(JSON.stringify(inferenceMutation.data, null, 2));
       // Store results for ImageBrowser labels
-      const results = inferenceMutation.data.aggregated_results || inferenceMutation.data.results || [];
+      const results =
+        inferenceMutation.data.aggregated_results || inferenceMutation.data.results || [];
       setInferenceResults(results);
     } else if (inferenceMutation.isError) {
       setResult('Error');
