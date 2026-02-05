@@ -1,6 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty } from 'antd';
-import { LoadingOutlined, ExclamationCircleOutlined, PictureOutlined } from '@ant-design/icons';
+import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty, Tag } from 'antd';
+import {
+  LoadingOutlined,
+  ExclamationCircleOutlined,
+  PictureOutlined,
+  TagsOutlined,
+} from '@ant-design/icons';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
 import type { TapisFile, InferenceModelMeta } from '../types/inference';
@@ -17,6 +22,62 @@ interface AggregatedResult {
   label: string;
   count: number;
 }
+
+interface LabelPreset {
+  value: string;
+  label: string;
+  labels: string[];
+}
+
+// Duplicate of what is definedon backend
+const ALL_DEFAULT_LABELS = [
+  'house',
+  'building',
+  'car',
+  'truck',
+  'bus',
+  'person',
+  'group of people',
+  'road',
+  'bridge',
+  'parking lot',
+  'debris',
+  'rubble',
+  'damaged building',
+  'flooded area',
+  'fallen tree',
+  'trees',
+  'water',
+  'sky',
+];
+
+const LABEL_PRESETS: LabelPreset[] = [
+  {
+    value: 'structures',
+    label: 'Structures',
+    labels: ['house', 'building', 'road', 'bridge', 'parking lot'],
+  },
+  {
+    value: 'damage',
+    label: 'Damage & Hazards',
+    labels: ['debris', 'rubble', 'damaged building', 'flooded area', 'fallen tree'],
+  },
+  {
+    value: 'vehicles_people',
+    label: 'Vehicles & People',
+    labels: ['car', 'truck', 'bus', 'person', 'group of people'],
+  },
+  {
+    value: 'environment',
+    label: 'Environment',
+    labels: ['trees', 'water', 'sky', 'flooded area', 'road'],
+  },
+  {
+    value: 'all',
+    label: 'All Labels (Default)',
+    labels: ALL_DEFAULT_LABELS,
+  },
+];
 
 const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBasePath }) => {
   const curatedFileList = useMemo(
@@ -49,6 +110,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
   const [selectedSensitivity, setSelectedSensitivity] = useState<'high' | 'medium' | 'low'>(
     'medium'
   );
+  const [selectedLabelPreset, setSelectedLabelPreset] = useState<string>('structures');
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
@@ -59,6 +121,12 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     return curatedSets.find((s) => s.value === selectedSet)?.files || [];
   }, [selectedSet, curatedSets]);
 
+  // Get current labels from selected preset
+  const currentLabels = useMemo(() => {
+    const preset = LABEL_PRESETS.find((p) => p.value === selectedLabelPreset);
+    return preset?.labels || ALL_DEFAULT_LABELS;
+  }, [selectedLabelPreset]);
+
   // Auto-select first model when models are loaded (but NOT auto-select set)
   useEffect(() => {
     if (clipModels && clipModels.length > 0 && !selectedModel) {
@@ -68,23 +136,24 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
 
   // Submit inference when:
   // - User first selects both a model and image set
-  // - User changes model, set, or sensitivity after initial selection
+  // - User changes model, set, or labels after initial selection
   useEffect(() => {
     if (selectedModel && selectedSet && currentFiles.length > 0) {
       inferenceMutation.mutate({
         files: currentFiles,
         model: selectedModel,
         sensitivity: selectedSensitivity,
+        labels: selectedLabelPreset === 'all' ? undefined : currentLabels,
       });
     }
     // excluding inferenceMutation from deps to avoid infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel, selectedSet, selectedSensitivity, currentFiles]);
+  }, [selectedModel, selectedSet, selectedSensitivity, selectedLabelPreset, currentFiles]);
 
-  // Clear results when switching set or model
+  // Clear results when switching set, model, or labels
   useEffect(() => {
     setAggregatedResults([]);
-  }, [selectedSet, selectedModel]);
+  }, [selectedSet, selectedModel, selectedLabelPreset]);
 
   // Aggregate inference results
   useEffect(() => {
@@ -160,11 +229,51 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               style={{ width: '100%' }}
               onChange={(val) => setSelectedSensitivity(val)}
               options={[
-                { label: 'High', value: 'high' } /*  - More labels, may include noise */,
-                { label: 'Medium', value: 'medium' } /* default */,
-                { label: 'Low', value: 'low' } /* fewer labels, higher confidence? */,
+                { label: 'High', value: 'high' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'Low', value: 'low' },
               ]}
             />
+          </Col>
+        </Row>
+        <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
+          <Col span={4} style={{ textAlign: 'right' }}>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
+              <TagsOutlined style={{ marginRight: 8 }} />
+              Label Preset
+            </div>
+          </Col>
+          <Col span={20}>
+            <Select
+              value={selectedLabelPreset}
+              style={{ width: '100%' }}
+              onChange={(val) => setSelectedLabelPreset(val)}
+              options={LABEL_PRESETS.map((p) => ({
+                label: `${p.label} (${p.labels.length} labels)`,
+                value: p.value,
+              }))}
+              optionRender={(option) => {
+                const preset = LABEL_PRESETS.find((p) => p.value === option.value);
+                return (
+                  <div>
+                    <div style={{ fontWeight: 500 }}>
+                      {preset?.label} ({preset?.labels.length} labels)
+                    </div>
+                    <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                      {preset?.labels.join(', ')}
+                    </div>
+                  </div>
+                );
+              }}
+            />
+            {/* Show active labels as tags below the dropdown */}
+            <div style={{ marginTop: 8, textAlign: 'left' }}>
+              {currentLabels.map((label) => (
+                <Tag key={label} color="blue" style={{ marginBottom: 4 }}>
+                  {label}
+                </Tag>
+              ))}
+            </div>
           </Col>
         </Row>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
