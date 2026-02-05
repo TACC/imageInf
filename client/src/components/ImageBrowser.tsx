@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button, Tag, Empty, Modal } from 'antd';
-import { LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { Button, Tag, Empty, Modal, Divider } from 'antd';
+import { LeftOutlined, RightOutlined, CheckOutlined, PlusOutlined } from '@ant-design/icons';
 import TapisImageViewer from './TapisImageViewer';
 import type { TapisFile, InferenceResult } from '../types/inference';
 
@@ -45,6 +45,22 @@ const ImageBrowser: React.FC<ImageBrowserProps> = ({
 
   const handleClose = () => {
     onIndexChange(null);
+  };
+
+  // TODO: Implement label editing functionality
+  const handleAcceptAll = () => {
+    console.log('Accept all labels:', currentLabels);
+    // TODO: Save accepted labels
+  };
+
+  const handleRemoveLabel = (label: string) => {
+    console.log('Remove label:', label);
+    // TODO: Remove label from suggestions
+  };
+
+  const handleAddLabel = () => {
+    console.log('Add new label');
+    // TODO: Open label picker or input
   };
 
   return (
@@ -132,40 +148,90 @@ const ImageBrowser: React.FC<ImageBrowserProps> = ({
             />
           </div>
 
-          {/* Right: Labels */}
+          {/* Right: Suggested Labels */}
           <div
             style={{
-              width: 220,
+              width: 250,
               borderLeft: '1px solid #333',
               paddingLeft: 24,
               display: 'flex',
               flexDirection: 'column',
             }}
           >
-            <div style={{ color: '#fff', fontWeight: 500, fontSize: 18, marginBottom: 16 }}>
-              Labels
+            <div style={{ color: '#fff', fontWeight: 500, fontSize: 18, marginBottom: 8 }}>
+              Suggested Labels
               {currentLabels.length > 0 && (
                 <span style={{ color: '#888', fontWeight: 400, marginLeft: 8 }}>
                   ({currentLabels.length})
                 </span>
               )}
             </div>
+            <div style={{ color: '#666', fontSize: 12, marginBottom: 16 }}>
+              Review and edit AI-suggested labels
+            </div>
 
-            {/* TODO: Consider adding ability to unmark/edit labels */}
             {currentLabels.length > 0 ? (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {currentLabels.map((label) => (
-                  <Tag
-                    key={label}
-                    color="blue"
-                    style={{ marginBottom: 0, cursor: 'default', fontSize: 14 }}
-                  >
-                    {label}
-                  </Tag>
-                ))}
-              </div>
+              <>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                  {currentLabels.map((label) => (
+                    <Tag
+                      key={label}
+                      color="blue"
+                      closable
+                      onClose={(e) => {
+                        e.preventDefault();
+                        handleRemoveLabel(label);
+                      }}
+                      style={{ marginBottom: 0, fontSize: 14 }}
+                    >
+                      {label}
+                    </Tag>
+                  ))}
+                </div>
+
+                <Button
+                  type="text"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddLabel}
+                  style={{
+                    color: '#888',
+                    padding: '4px 0',
+                    justifyContent: 'flex-start',
+                    marginBottom: 16,
+                  }}
+                >
+                  Add label
+                </Button>
+
+                <Divider style={{ margin: '0 0 16px 0', borderColor: '#333' }} />
+
+                <Button
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  onClick={handleAcceptAll}
+                  style={{ width: '100%' }}
+                >
+                  Accept All
+                </Button>
+              </>
             ) : (
-              <div style={{ color: '#666', fontSize: 14 }}>No labels detected</div>
+              <>
+                <div style={{ color: '#666', fontSize: 14, marginBottom: 16 }}>
+                  No labels detected
+                </div>
+                <Button
+                  type="text"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddLabel}
+                  style={{
+                    color: '#888',
+                    padding: '4px 0',
+                    justifyContent: 'flex-start',
+                  }}
+                >
+                  Add label manually
+                </Button>
+              </>
             )}
           </div>
         </div>

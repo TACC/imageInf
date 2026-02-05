@@ -266,7 +266,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
           <Col span={4} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
               <TagsOutlined style={{ marginRight: 8 }} />
-              Label Preset
+              Look For
             </div>
           </Col>
           <Col span={20}>
@@ -490,7 +490,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             >
               {isLoading && <LoadingOutlined style={{ color: '#40a9ff' }} />}
               {isError && <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-              <span>Analysis Results</span>
+              <span>Suggested Labels</span>
               {aggregatedResults.length > 0 && (
                 <span style={{ color: '#888', fontWeight: 400 }}>
                   ({aggregatedResults.length} labels)
@@ -501,7 +501,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             {!isReady ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<span style={{ color: '#888' }}>Results will appear here</span>}
+                description={
+                  <span style={{ color: '#888' }}>Suggested labels will appear here</span>
+                }
                 style={{ padding: '80px 0' }}
               />
             ) : isLoading ? (
