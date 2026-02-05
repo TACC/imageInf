@@ -515,12 +515,6 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               )}
             </div>
 
-            {aggregatedResults.length > 0 && (
-              <div style={{ color: '#888', fontSize: 12, marginBottom: 12 }}>
-                Click labels to filter gallery
-              </div>
-            )}
-
             {!isReady ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
