@@ -108,9 +108,6 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
 
   const [selectedSet, setSelectedSet] = useState<string | undefined>(undefined);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
-  const [selectedSensitivity, setSelectedSensitivity] = useState<'high' | 'medium' | 'low'>(
-    'medium'
-  );
   const [selectedLabelPreset, setSelectedLabelPreset] = useState<string>('structures');
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
   const [inferenceResults, setInferenceResults] = useState<InferenceResult[]>([]);
@@ -168,13 +165,13 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       inferenceMutation.mutate({
         files: currentFiles,
         model: selectedModel,
-        sensitivity: selectedSensitivity,
+        /* sensitivity: selectedSensitivity,*/
         labels: selectedLabelPreset === 'all' ? undefined : currentLabels,
       });
     }
     // excluding inferenceMutation from deps to avoid infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel, selectedSet, selectedSensitivity, selectedLabelPreset, currentFiles]);
+  }, [selectedModel, selectedSet, selectedLabelPreset, currentFiles]);
 
   // Clear results and selected filter labels when switching set, model, or labels
   useEffect(() => {
@@ -261,23 +258,6 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             />
           </Col>
         </Row>
-        {/* <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
-          <Col span={4} style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>Sensitivity</div>
-          </Col>
-          <Col span={20}>
-            <Select
-              value={selectedSensitivity}
-              style={{ width: '100%' }}
-              onChange={(val) => setSelectedSensitivity(val)}
-              options={[
-                { label: 'High', value: 'high' },
-                { label: 'Medium', value: 'medium' },
-                { label: 'Low', value: 'low' },
-              ]}
-            />
-          </Col>
-        </Row> */}
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
           <Col span={4} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
