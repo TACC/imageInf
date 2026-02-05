@@ -219,7 +219,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             />
           </Col>
         </Row>
-        <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
+        {/* <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
           <Col span={4} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>Sensitivity</div>
           </Col>
@@ -235,7 +235,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               ]}
             />
           </Col>
-        </Row>
+        </Row> */}
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
           <Col span={4} style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
