@@ -68,6 +68,6 @@ def run_sync_inference(
     except ValueError as e:
         logger.warning("Inference ValueError: user=%s error=%s", user.username, e)
         raise HTTPException(400, detail=str(e))
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error during inference: user=%s", user.username)
         raise HTTPException(500, detail="Internal inference error")
