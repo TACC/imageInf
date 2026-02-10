@@ -61,7 +61,9 @@ def run_sync_inference(
             labels=request.labels,
             sensitivity=request.sensitivity,
         )
-        logger.info("Sync inference complete: user=%s model=%s", user.username, request.model)
+        logger.info(
+            "Sync inference complete: user=%s model=%s", user.username, request.model
+        )
         return result
     except ValueError as e:
         logger.warning("Inference ValueError: user=%s error=%s", user.username, e)
