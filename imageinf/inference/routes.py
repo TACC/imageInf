@@ -1,8 +1,12 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Depends
 from .models import InferenceRequest, InferenceResponse
 from .processor import run_model_on_tapis_images
 from .registry import MODEL_METADATA
 from ..utils.auth import get_tapis_user, TapisUser
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/inference", tags=["inference"], dependencies=[Depends(get_tapis_user)]
@@ -39,16 +43,31 @@ Recommended for ≤ 5 image files. For larger workloads, use the asynchronous
 def run_sync_inference(
     request: InferenceRequest, user: TapisUser = Depends(get_tapis_user)
 ):
+    logger.info(
+        "Sync inference request: user=%s model=%s files=%d",
+        user.username,
+        request.model,
+        len(request.files),
+    )
+
     if len(request.files) > 5:
         raise HTTPException(400, detail="Too many files. Use async endpoint for >5.")
 
     try:
-        return run_model_on_tapis_images(
+        result = run_model_on_tapis_images(
             request.files,
             user,
             request.model,
             labels=request.labels,
             sensitivity=request.sensitivity,
         )
+        logger.info(
+            "Sync inference complete: user=%s model=%s", user.username, request.model
+        )
+        return result
     except ValueError as e:
+        logger.warning("Inference ValueError: user=%s error=%s", user.username, e)
         raise HTTPException(400, detail=str(e))
+    except Exception:
+        logger.exception("Unexpected error during inference: user=%s", user.username)
+        raise HTTPException(500, detail="Internal inference error")

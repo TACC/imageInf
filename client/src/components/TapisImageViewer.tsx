@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Typography, Modal } from 'antd';
+import React from 'react';
+import { Typography } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useFileContent } from '../hooks/useFileContent';
 import { useToken } from '../hooks/useToken';
@@ -19,13 +19,6 @@ export const TapisImageViewer: React.FC<TapisImageViewerProps> = ({ file, style 
     isLoading: fileLoading,
     isError: fileError,
   } = useFileContent(tokenData, file);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalImgUrl, setModalImgUrl] = useState<string | null>(null);
-
-  const handleImageClick = (imageUrl: string) => {
-    setModalImgUrl(imageUrl);
-    setModalOpen(true);
-  };
 
   const renderContent = () => {
     if (fileLoading) {
@@ -47,9 +40,7 @@ export const TapisImageViewer: React.FC<TapisImageViewerProps> = ({ file, style 
             maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: 4,
-            cursor: 'pointer',
           }}
-          onClick={() => handleImageClick(imageUrl)}
         />
       );
     }
@@ -70,9 +61,7 @@ export const TapisImageViewer: React.FC<TapisImageViewerProps> = ({ file, style 
             maxHeight: '100%',
             objectFit: 'contain',
             borderRadius: 4,
-            cursor: 'pointer',
           }}
-          onClick={() => handleImageClick(imageUrl)}
         />
       );
     }
@@ -89,35 +78,7 @@ export const TapisImageViewer: React.FC<TapisImageViewerProps> = ({ file, style 
     );
   };
 
-  return (
-    <>
-      <div style={style}>{renderContent()}</div>
-      <Modal
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
-        footer={null}
-        width="90vw"
-        style={{ top: 24 }}
-        bodyStyle={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 0 }}
-        destroyOnClose
-      >
-        {modalImgUrl && (
-          <img
-            src={modalImgUrl}
-            alt="Full size preview"
-            style={{
-              maxWidth: '90vw',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              borderRadius: 8,
-              background: '#111',
-              margin: 0,
-            }}
-          />
-        )}
-      </Modal>
-    </>
-  );
+  return <div style={style}>{renderContent()}</div>;
 };
 
 export default TapisImageViewer;

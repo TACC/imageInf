@@ -1,10 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty } from 'antd';
-import { LoadingOutlined, ExclamationCircleOutlined, PictureOutlined } from '@ant-design/icons';
+import { Row, Col, Select, Divider, Spin, Card, List, Badge, Empty, Tag } from 'antd';
+import {
+  LoadingOutlined,
+  ExclamationCircleOutlined,
+  PictureOutlined,
+  TagsOutlined,
+  CloseCircleOutlined,
+} from '@ant-design/icons';
 import { useInference } from '../hooks/useInference';
 import type { TokenInfo } from '../types/token';
-import type { TapisFile, InferenceModelMeta } from '../types/inference';
+import type { TapisFile, InferenceModelMeta, InferenceResult } from '../types/inference';
 import TapisImageViewer from './TapisImageViewer';
+import ImageBrowser from './ImageBrowser';
 import { getCuratedFileList } from '../utils/examples';
 
 interface DemoInterfaceProps {
@@ -17,6 +24,62 @@ interface AggregatedResult {
   label: string;
   count: number;
 }
+
+interface LabelPreset {
+  value: string;
+  label: string;
+  labels: string[];
+}
+
+// Duplicate of what is defined on backend
+const ALL_DEFAULT_LABELS = [
+  'house',
+  'building',
+  'car',
+  'truck',
+  'bus',
+  'person',
+  'group of people',
+  'road',
+  'bridge',
+  'parking lot',
+  'debris',
+  'rubble',
+  'damaged building',
+  'flooded area',
+  'fallen tree',
+  'trees',
+  'water',
+  'sky',
+];
+
+const LABEL_PRESETS: LabelPreset[] = [
+  {
+    value: 'structures',
+    label: 'Structures',
+    labels: ['house', 'building', 'road', 'bridge', 'parking lot'],
+  },
+  {
+    value: 'damage',
+    label: 'Damage & Hazards',
+    labels: ['debris', 'rubble', 'damaged building', 'flooded area', 'fallen tree'],
+  },
+  {
+    value: 'vehicles_people',
+    label: 'Vehicles & People',
+    labels: ['car', 'truck', 'bus', 'person', 'group of people'],
+  },
+  {
+    value: 'environment',
+    label: 'Environment',
+    labels: ['trees', 'water', 'sky', 'flooded area', 'road'],
+  },
+  {
+    value: 'all',
+    label: 'All Labels (Default)',
+    labels: ALL_DEFAULT_LABELS,
+  },
+];
 
 const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBasePath }) => {
   const curatedFileList = useMemo(
@@ -46,10 +109,11 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
 
   const [selectedSet, setSelectedSet] = useState<string | undefined>(undefined);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
-  const [selectedSensitivity, setSelectedSensitivity] = useState<'high' | 'medium' | 'low'>(
-    'medium'
-  );
+  const [selectedLabelPreset, setSelectedLabelPreset] = useState<string>('structures');
   const [aggregatedResults, setAggregatedResults] = useState<AggregatedResult[]>([]);
+  const [inferenceResults, setInferenceResults] = useState<InferenceResult[]>([]);
+  const [selectedFilterLabels, setSelectedFilterLabels] = useState<string[]>([]);
+  const [browseIndex, setBrowseIndex] = useState<number | null>(null);
 
   const inferenceMutation = useInference(tokenInfo.token, apiBasePath);
 
@@ -58,6 +122,35 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     if (!selectedSet) return [];
     return curatedSets.find((s) => s.value === selectedSet)?.files || [];
   }, [selectedSet, curatedSets]);
+
+  // Get current labels from selected preset
+  const currentLabels = useMemo(() => {
+    const preset = LABEL_PRESETS.find((p) => p.value === selectedLabelPreset);
+    return preset?.labels || ALL_DEFAULT_LABELS;
+  }, [selectedLabelPreset]);
+
+  // Build a map of file path -> labels detected
+  const fileLabelsMap = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
+    inferenceResults.forEach((result) => {
+      const labels = new Set<string>();
+      result.predictions?.forEach((p) => labels.add(p.label));
+      map[result.path] = labels;
+    });
+    return map;
+  }, [inferenceResults]);
+
+  // Filter files based on selected labels (show files that have ANY of the selected labels)
+  const filteredFiles = useMemo(() => {
+    if (selectedFilterLabels.length === 0) {
+      return currentFiles;
+    }
+    return currentFiles.filter((file) => {
+      const fileLabels = fileLabelsMap[file.path];
+      if (!fileLabels) return false;
+      return selectedFilterLabels.some((label) => fileLabels.has(label));
+    });
+  }, [currentFiles, selectedFilterLabels, fileLabelsMap]);
 
   // Auto-select first model when models are loaded (but NOT auto-select set)
   useEffect(() => {
@@ -68,23 +161,26 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
 
   // Submit inference when:
   // - User first selects both a model and image set
-  // - User changes model, set, or sensitivity after initial selection
+  // - User changes model, set, or labels after initial selection
   useEffect(() => {
     if (selectedModel && selectedSet && currentFiles.length > 0) {
       inferenceMutation.mutate({
         files: currentFiles,
         model: selectedModel,
-        sensitivity: selectedSensitivity,
+        labels: selectedLabelPreset === 'all' ? undefined : currentLabels,
       });
     }
     // excluding inferenceMutation from deps to avoid infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedModel, selectedSet, selectedSensitivity, currentFiles]);
+  }, [selectedModel, selectedSet, selectedLabelPreset, currentFiles]);
 
-  // Clear results when switching set or model
+  // Clear results and selected filter labels when switching set, model, or labels
   useEffect(() => {
     setAggregatedResults([]);
-  }, [selectedSet, selectedModel]);
+    setInferenceResults([]);
+    setSelectedFilterLabels([]);
+    setBrowseIndex(null);
+  }, [selectedSet, selectedModel, selectedLabelPreset]);
 
   // Aggregate inference results
   useEffect(() => {
@@ -94,6 +190,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
       // Access the nested array - use aggregated_results for CLIP
       const response = inferenceMutation.data;
       const results = response.aggregated_results || response.results || [];
+
+      // Store full results for filtering
+      setInferenceResults(results);
 
       results.forEach((fileResult) => {
         fileResult.predictions?.forEach((prediction) => {
@@ -109,9 +208,22 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
     }
   }, [inferenceMutation.isSuccess, inferenceMutation.data]);
 
+  const toggleFilterLabel = (label: string) => {
+    setSelectedFilterLabels((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+    setBrowseIndex(null); // Reset browser when filter changes
+  };
+
+  const clearFilterLabels = () => {
+    setSelectedFilterLabels([]);
+    setBrowseIndex(null);
+  };
+
   const isReady = selectedModel && selectedSet;
   const isLoading = inferenceMutation.isPending;
   const isError = inferenceMutation.isError;
+  const isFiltered = selectedFilterLabels.length > 0;
 
   return (
     <>
@@ -152,19 +264,42 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
         </Row>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
           <Col span={4} style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>Sensitivity</div>
+            <div style={{ fontWeight: 500, color: '#fff', fontSize: 18 }}>
+              <TagsOutlined style={{ marginRight: 8 }} />
+              Look For
+            </div>
           </Col>
           <Col span={20}>
             <Select
-              value={selectedSensitivity}
+              value={selectedLabelPreset}
               style={{ width: '100%' }}
-              onChange={(val) => setSelectedSensitivity(val)}
-              options={[
-                { label: 'High', value: 'high' } /*  - More labels, may include noise */,
-                { label: 'Medium', value: 'medium' } /* default */,
-                { label: 'Low', value: 'low' } /* fewer labels, higher confidence? */,
-              ]}
+              onChange={(val) => setSelectedLabelPreset(val)}
+              options={LABEL_PRESETS.map((p) => ({
+                label: `${p.label} (${p.labels.length} labels)`,
+                value: p.value,
+              }))}
+              optionRender={(option) => {
+                const preset = LABEL_PRESETS.find((p) => p.value === option.value);
+                return (
+                  <div>
+                    <div style={{ fontWeight: 500 }}>
+                      {preset?.label} ({preset?.labels.length} labels)
+                    </div>
+                    <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                      {preset?.labels.join(', ')}
+                    </div>
+                  </div>
+                );
+              }}
             />
+            {/* Show active labels as tags below the dropdown */}
+            <div style={{ marginTop: 8, textAlign: 'left' }}>
+              {currentLabels.map((label) => (
+                <Tag key={label} color="blue" style={{ marginBottom: 4 }}>
+                  {label}
+                </Tag>
+              ))}
+            </div>
           </Col>
         </Row>
         <Row gutter={16} style={{ marginBottom: 24, alignItems: 'center' }}>
@@ -203,14 +338,60 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
               border: '1px solid #434343',
             }}
           >
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 500, marginBottom: 16 }}>
-              Gallery
-              {currentFiles.length > 0 && (
-                <span style={{ color: '#888', fontWeight: 400, marginLeft: 8 }}>
-                  ({currentFiles.length} images)
-                </span>
+            <div
+              style={{
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: 500,
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                Gallery
+                {currentFiles.length > 0 && (
+                  <span style={{ color: '#888', fontWeight: 400, marginLeft: 8 }}>
+                    {isFiltered ? (
+                      <>
+                        {filteredFiles.length} of {currentFiles.length} images
+                      </>
+                    ) : (
+                      `(${currentFiles.length} images)`
+                    )}
+                  </span>
+                )}
+              </div>
+              {isFiltered && (
+                <Tag
+                  color="blue"
+                  style={{ cursor: 'pointer' }}
+                  onClick={clearFilterLabels}
+                  icon={<CloseCircleOutlined />}
+                >
+                  Clear filter
+                </Tag>
               )}
             </div>
+
+            {/* Show selected filter labels */}
+            {isFiltered && (
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ color: '#888', marginRight: 8 }}>Filtering by:</span>
+                {selectedFilterLabels.map((label) => (
+                  <Tag
+                    key={label}
+                    color="blue"
+                    closable
+                    onClose={() => toggleFilterLabel(label)}
+                    style={{ marginBottom: 4 }}
+                  >
+                    {label}
+                  </Tag>
+                ))}
+              </div>
+            )}
 
             {!isReady ? (
               <Empty
@@ -236,12 +417,21 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
                 />
                 <span style={{ color: '#fff', marginLeft: 16 }}>Loading images...</span>
               </div>
+            ) : filteredFiles.length === 0 ? (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  <span style={{ color: '#888' }}>No images match the selected labels</span>
+                }
+                style={{ padding: '80px 0' }}
+              />
             ) : (
               <Row gutter={[16, 16]}>
-                {currentFiles.map((file) => (
+                {filteredFiles.map((file, index) => (
                   <Col xs={12} sm={8} md={8} key={file.path}>
                     <Card
                       hoverable
+                      onClick={() => setBrowseIndex(index)}
                       cover={
                         <TapisImageViewer
                           file={file}
@@ -300,7 +490,7 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             >
               {isLoading && <LoadingOutlined style={{ color: '#40a9ff' }} />}
               {isError && <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-              <span>Analysis Results</span>
+              <span>Suggested Labels</span>
               {aggregatedResults.length > 0 && (
                 <span style={{ color: '#888', fontWeight: 400 }}>
                   ({aggregatedResults.length} labels)
@@ -311,7 +501,9 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             {!isReady ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description={<span style={{ color: '#888' }}>Results will appear here</span>}
+                description={
+                  <span style={{ color: '#888' }}>Suggested labels will appear here</span>
+                }
                 style={{ padding: '80px 0' }}
               />
             ) : isLoading ? (
@@ -335,26 +527,49 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
             ) : aggregatedResults.length > 0 ? (
               <List
                 dataSource={aggregatedResults}
-                renderItem={(item) => (
-                  <List.Item style={{ borderBottom: '1px solid #333', padding: '12px 0' }}>
-                    <div
+                renderItem={(item) => {
+                  const isSelected = selectedFilterLabels.includes(item.label);
+                  return (
+                    <List.Item
+                      onClick={() => toggleFilterLabel(item.label)}
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                        alignItems: 'center',
+                        borderBottom: '1px solid #333',
+                        padding: '12px 8px',
+                        cursor: 'pointer',
+                        background: isSelected ? 'rgba(24, 144, 255, 0.15)' : 'transparent',
+                        borderRadius: 4,
+                        marginBottom: 2,
+                        transition: 'background 0.2s',
                       }}
                     >
-                      <span style={{ color: '#fff' }}>{item.label}</span>
-                      <Badge
-                        count={item.count}
-                        style={{ backgroundColor: '#1890ff' }}
-                        showZero
-                        overflowCount={99}
-                      />
-                    </div>
-                  </List.Item>
-                )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: isSelected ? '#1890ff' : '#fff',
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                        <Badge
+                          count={item.count}
+                          style={{
+                            backgroundColor: isSelected ? '#1890ff' : '#555',
+                          }}
+                          showZero
+                          overflowCount={99}
+                        />
+                      </div>
+                    </List.Item>
+                  );
+                }}
               />
             ) : (
               <div style={{ color: '#888', textAlign: 'center', padding: '80px 0' }}>
@@ -364,6 +579,14 @@ const DemoInterface: React.FC<DemoInterfaceProps> = ({ models, tokenInfo, apiBas
           </div>
         </Col>
       </Row>
+
+      {/* Image Browser Modal */}
+      <ImageBrowser
+        files={filteredFiles}
+        currentIndex={browseIndex}
+        onIndexChange={setBrowseIndex}
+        inferenceResults={inferenceResults}
+      />
     </>
   );
 };
