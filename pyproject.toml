@@ -1,3 +1,28 @@
+[project]
+name = "imageinf"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "pyjwt",
+    "uvicorn[standard]",
+    "httpx",
+    "tapipy",
+    "Pillow",
+    "torch>=2.10,<3",
+    "transformers>=4.57,<5",
+    "huggingface_hub[hf_xet]",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "black[jupyter]",
+    "flake8",
+]
+
 [tool.black]
 line-length = 88
 target-version = ["py311"]
@@ -9,3 +34,10 @@ extend-exclude = '''
 )/
 '''
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
