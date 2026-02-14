@@ -5,16 +5,21 @@ WORKDIR /app
 
 # Install system packages (including vim)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    vim \
+    vim curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-# Install dependencies (frozen from lockfile, no dev deps)
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+
+ARG DEV=false
+RUN if [ "$DEV" = "true" ]; then \
+      uv sync --frozen --no-install-project; \
+    else \
+      uv sync --frozen --no-dev --no-install-project; \
+    fi
 
 COPY ./imageinf /app/imageinf
 COPY ./conftest.py /app/.
