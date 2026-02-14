@@ -19,7 +19,7 @@ uploaded datasets to support research workflows and data discovery.
 ### Build
 
 ```bash
-make build
+make build-dev
 ```
 
 ### Start

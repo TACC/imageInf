@@ -12,7 +12,7 @@ BASE_PAYLOAD = {
     ]
 }
 
-BASE_URL = "/inference/sync"
+BASE_URL = "/inference/jobs/sync"
 
 
 def test_missing_token_returns_401(client_unauthed):

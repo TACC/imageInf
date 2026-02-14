@@ -48,3 +48,43 @@ def isolated_cache_dir(tmp_path, monkeypatch):
     monkeypatch.setattr("imageinf.utils.io.CACHE_DIR", str(test_cache))
     yield test_cache
     # Cleanup happens automatically via tmp_path - nothing needed here
+
+
+@pytest.fixture
+def mock_celery_task(monkeypatch):
+    """Make Celery tasks run synchronously in-process."""
+    from imageinf.inference import tasks
+
+    class FakeAsyncResult:
+        def __init__(self, result):
+            self.result = result
+
+        def get(self, timeout=None):
+            return self.result
+
+    def fake_delay(*args, **kwargs):
+        # Call the actual task function directly (skip Celery)
+        result = tasks.run_inference_task(*args, **kwargs)
+        return FakeAsyncResult(result)
+
+    monkeypatch.setattr(tasks.run_inference_task, "delay", fake_delay)
+
+
+@pytest.fixture
+def mock_vit(monkeypatch):
+    from imageinf.inference import processor
+    from imageinf.inference.models import Prediction
+
+    class FakeViT:
+        def __init__(self, model_name=None):
+            pass
+
+        def classify_image(self, image):
+            return [
+                Prediction(label="mock-label", score=0.99),
+                Prediction(label="another-label", score=0.01),
+            ]
+
+    monkeypatch.setattr(
+        processor, "MODEL_REGISTRY", {"google/vit-base-patch16-224": FakeViT}
+    )

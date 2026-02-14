@@ -1,29 +1,9 @@
 import pytest
 
 
-@pytest.fixture
-def mock_vit(monkeypatch):
-    from imageinf.inference import processor
-    from imageinf.inference.models import Prediction
-
-    class FakeViT:
-        def __init__(self, model_name=None):
-            pass
-
-        def classify_image(self, image):
-            return [
-                Prediction(label="mock-label", score=0.99),
-                Prediction(label="another-label", score=0.01),
-            ]
-
-    monkeypatch.setattr(
-        processor, "MODEL_REGISTRY", {"google/vit-base-patch16-224": FakeViT}
-    )
-
-
 @pytest.mark.slow
 def test_sync_inference_one_image_using_hugging_face_model(
-    client_authed, mock_tapis_files
+    client_authed, mock_tapis_files, mock_celery_task
 ):
     payload = {
         "inferenceType": "classification",
@@ -36,7 +16,7 @@ def test_sync_inference_one_image_using_hugging_face_model(
         "model": "google/vit-base-patch16-224",
     }
 
-    response = client_authed.post("/inference/sync", json=payload)
+    response = client_authed.post("/inference/jobs/sync", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -51,7 +31,9 @@ def test_sync_inference_one_image_using_hugging_face_model(
     assert isinstance(result["predictions"], list)
 
 
-def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
+def test_sync_inference_one_image(
+    client_authed, mock_tapis_files, mock_vit, mock_celery_task
+):
     payload = {
         "inferenceType": "classification",
         "files": [
@@ -62,7 +44,7 @@ def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
         ],
         "model": "google/vit-base-patch16-224",
     }
-    response = client_authed.post("/inference/sync", json=payload)
+    response = client_authed.post("/inference/jobs/sync", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -89,7 +71,7 @@ def test_sync_inference_one_image(client_authed, mock_tapis_files, mock_vit):
 
 
 def test_sync_inference_one_image_with_location(
-    make_authed_client, mock_tapis_files_with_location, mock_vit
+    make_authed_client, mock_tapis_files_with_location, mock_vit, mock_celery_task
 ):
     client = make_authed_client()
 
@@ -103,7 +85,7 @@ def test_sync_inference_one_image_with_location(
         ],
         "model": "google/vit-base-patch16-224",
     }
-    response = client.post("/inference/sync", json=payload)
+    response = client.post("/inference/jobs/sync", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -113,7 +95,9 @@ def test_sync_inference_one_image_with_location(
     assert result["metadata"]["latitude"] is not None
 
 
-def test_sync_inference_unauthed(client_unauthed, mock_tapis_files, mock_vit):
+def test_sync_inference_unauthed(
+    client_unauthed, mock_tapis_files, mock_vit, mock_celery_task
+):
     payload = {
         "inferenceType": "classification",
         "files": [
@@ -124,5 +108,5 @@ def test_sync_inference_unauthed(client_unauthed, mock_tapis_files, mock_vit):
         ],
         "model": "google/vit-base-patch16-224",
     }
-    response = client_unauthed.post("/inference/sync", json=payload)
+    response = client_unauthed.post("/inference/jobs/sync", json=payload)
     assert response.status_code == 401

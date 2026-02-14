@@ -5,23 +5,28 @@ WORKDIR /app
 
 # Install system packages (including vim)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    vim \
+    vim curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Use CPU-only PyTorch by default. For GPU support, build with:
-#   docker build --build-arg TORCH_INDEX=https://download.pytorch.org/whl/cu121 ...
-ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --extra-index-url ${TORCH_INDEX} -r requirements.txt
+COPY pyproject.toml uv.lock ./
 
-
-WORKDIR /app
+ARG DEV=false
+RUN if [ "$DEV" = "true" ]; then \
+      uv sync --frozen --no-install-project; \
+    else \
+      uv sync --frozen --no-dev --no-install-project; \
+    fi
 
 COPY ./imageinf /app/imageinf
 COPY ./conftest.py /app/.
 
+ENV PYTHONPATH=/app
+
+ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH=/app
 
 CMD ["uvicorn", "imageinf.main:app", "--host", "0.0.0.0", "--port", "8000"]

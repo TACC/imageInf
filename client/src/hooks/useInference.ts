@@ -4,7 +4,7 @@ import type { InferenceRequest, InferenceResponse } from '../types/inference';
 export const useInference = (tapisToken: string, apiBasePath: string) => {
   return useMutation({
     mutationFn: async (inferenceRequest: InferenceRequest) => {
-      const response = await fetch(`${apiBasePath}/api/inference/sync`, {
+      const response = await fetch(`${apiBasePath}/api/inference/jobs/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
