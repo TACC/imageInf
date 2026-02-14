@@ -47,9 +47,9 @@ def list_models():
 @router.get("/jobs/{job_id}")
 def get_inference_result(job_id: str):
     """Get job status and result."""
-    # TODO: Persist results to DB for durability and to enforce user-scoped access (verify
-    #  requesting user owns this job). Currently relying on Redis and its 24 hr default storage
-    #  with no kind of access control.
+    # TODO: Persist results to DB for durability and to enforce user-scoped
+    #  access (verify requesting user owns this job). Currently relying on
+    #  Redis and its 24 hr default storage with no kind of access control.
     result = AsyncResult(job_id)
 
     response = {"task_id": job_id, "status": result.state}
@@ -91,7 +91,7 @@ def run_sync_inference(
     try:
         result = run_inference_task.delay(
             [f.model_dump() for f in request.files],
-            user.model_dump(),  # {"username": "...", "tapis_token": "...", "tenant_host": "..."}
+            user.model_dump(),
             request.model,
             labels=request.labels,
             sensitivity=request.sensitivity,
