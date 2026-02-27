@@ -24,15 +24,67 @@ services:
   imageinf:
     image: taccwma/imageinf:local
     container_name: imageinf_service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       - LOG_LEVEL=DEBUG
       - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
     volumes:
       - .:/app
+      - /app/.venv # preserve venv from image
       - huggingface-cache:/root/.cache/huggingface  # Share the cache
     networks:
       - imageinf-network
     command: uvicorn imageinf.main:app --host 0.0.0.0 --port 8000 --reload
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: imageinf_rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - imageinf-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: imageinf_redis
+    networks:
+      - imageinf-network
+
+  celery-worker:
+    image: taccwma/imageinf:local
+    container_name: imageinf_celery_worker
+    volumes:
+      - .:/app
+      - /app/.venv # preserve venv from image
+      - huggingface-cache:/root/.cache/huggingface
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - imageinf-network
+    command: celery -A imageinf.celery_app worker --loglevel=debug
 
   nginx:
     image: nginx:alpine
@@ -42,6 +94,9 @@ services:
     volumes:
       - ./local_conf/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - imageinf
+      imageinf:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - imageinf-network
