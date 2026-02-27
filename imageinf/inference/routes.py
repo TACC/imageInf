@@ -66,10 +66,10 @@ def get_inference_result(job_id: str):
     "/jobs/sync",
     summary="Run synchronous inference",
     description="""
--This endpoint is designed for quick, small jobs that can be processed immediately.
--Recommended for ≤ 5 image files. For larger workloads, use the asynchronous
--`/inference` endpoint.
--""",
+This endpoint is designed for quick, small jobs that can be processed immediately.
+Recommended for ≤ 5 image files. For larger workloads, use the asynchronous
+`/inference` endpoint.
+""",
     response_model=InferenceResponse,
 )
 def run_sync_inference(
